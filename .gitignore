@@ -3,3 +3,4 @@ output/
 .env
 *.pdf
 .DS_Store
+CLAUDE.md
