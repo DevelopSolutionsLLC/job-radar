@@ -4,8 +4,13 @@
   "description": "AI-powered job search pipeline — scan, evaluate, apply",
   "type": "module",
   "scripts": {
+    "test": "node scripts/test-all.mjs",
     "scan": "node scripts/scan.mjs",
-    "pdf": "node scripts/generate-pdf.mjs"
+    "pdf": "node scripts/generate-pdf.mjs",
+    "verify": "node scripts/verify-pipeline.mjs",
+    "dedup": "node scripts/dedup-tracker.mjs",
+    "normalize": "node scripts/normalize-statuses.mjs",
+    "liveness": "node scripts/check-liveness.mjs"
   },
   "keywords": ["job-search", "career", "automation"],
   "author": "Victor T. Chevalier",
