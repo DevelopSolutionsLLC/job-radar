@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{NAME}} - CV</title>
+  <style>
+    @page { size: letter; margin: 0.6in 0.7in; }
+    body {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-size: 10.5pt;
+      line-height: 1.4;
+      color: #1a1a1a;
+      margin: 0;
+      padding: 0;
+    }
+    h1 { font-size: 20pt; margin: 0 0 4px 0; }
+    h2 {
+      font-size: 11pt;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 1.5px solid #333;
+      padding-bottom: 3px;
+      margin: 14px 0 8px 0;
+    }
+    .contact { font-size: 9pt; color: #555; margin-bottom: 12px; }
+    .entry { margin-bottom: 10px; }
+    .entry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .entry-header .title { font-weight: bold; }
+    .entry-header .date { font-size: 9pt; color: #666; }
+    .entry-header .company { font-style: italic; }
+    ul { margin: 4px 0; padding-left: 18px; }
+    li { margin-bottom: 2px; }
+    .skills { columns: 2; column-gap: 24px; }
+  </style>
+</head>
+<body>
+  <h1>{{NAME}}</h1>
+  <div class="contact">{{EMAIL}} | {{LOCATION}} | {{LINKS}}</div>
+
+  <h2>Summary</h2>
+  <p>{{SUMMARY}}</p>
+
+  <h2>Experience</h2>
+  {{EXPERIENCE}}
+
+  <h2>Projects</h2>
+  {{PROJECTS}}
+
+  <h2>Education</h2>
+  {{EDUCATION}}
+
+  <h2>Skills</h2>
+  <div class="skills">{{SKILLS}}</div>
+</body>
+</html>

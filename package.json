@@ -1,0 +1,17 @@
+{
+  "name": "job-radar",
+  "version": "0.1.0",
+  "description": "AI-powered job search pipeline — scan, evaluate, apply",
+  "type": "module",
+  "scripts": {
+    "scan": "node scripts/scan.mjs",
+    "pdf": "node scripts/generate-pdf.mjs"
+  },
+  "keywords": ["job-search", "career", "automation"],
+  "author": "Victor T. Chevalier",
+  "license": "MIT",
+  "dependencies": {
+    "js-yaml": "^4.1.1",
+    "playwright": "^1.58.1"
+  }
+}

@@ -1,0 +1,37 @@
+title_filter:
+  positive:
+    - engineer
+    - developer
+    - software
+  negative:
+    - intern
+    - junior
+    - contractor
+
+# API-based scanners (free, reliable, no auth)
+greenhouse:
+  - name: Anthropic
+    board: anthropic
+  - name: Stripe
+    board: stripe
+  - name: Figma
+    board: figma
+
+ashby:
+  - name: Vercel
+    board: vercel
+  - name: Linear
+    board: linear
+
+lever:
+  - name: Netflix
+    board: netflix
+
+# RSS feeds (LinkedIn job alerts, Indeed searches)
+rss:
+  # Set up a LinkedIn job alert, copy the RSS feed URL
+  # - name: LinkedIn - Remote Engineer
+  #   url: https://www.linkedin.com/jobs/...rss
+  # Indeed RSS: https://www.indeed.com/rss?q=software+engineer&l=remote
+  # - name: Indeed - Software Engineer
+  #   url: https://www.indeed.com/rss?q=software+engineer&l=remote

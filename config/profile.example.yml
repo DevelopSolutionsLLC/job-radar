@@ -1,0 +1,21 @@
+name: Your Name
+email: you@example.com
+location: City, Country
+timezone: America/New_York
+
+targets:
+  roles:
+    - Senior Software Engineer
+    - Staff Engineer
+  min_score: 4.0  # don't apply below this
+
+preferences:
+  remote: preferred  # required | preferred | open | no
+  company_size: any  # startup | mid | enterprise | any
+  deal_breakers: []  # e.g., ["on-site only", "no equity"]
+
+compensation:
+  currency: USD
+  min: 150000
+  target: 180000
+  max: 220000
