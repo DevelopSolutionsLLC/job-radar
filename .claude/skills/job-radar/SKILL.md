@@ -90,7 +90,36 @@ These commands modify `config/portals.yml` so the user never has to edit YAML di
 
 ### Support
 
-- `/job-radar donate` → Run `node scripts/donate.mjs`. Shows a QR code and Cash App link.
+- `/job-radar donate` → Print the donate block below directly as text output (do NOT run it via Bash — tool output gets collapsed). Output this exactly:
+
+```
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                         ┃
+┃ Thanks for using job-radar!             ┃
+┃                                         ┃
+┃  ▄▄▄▄▄▄▄ ▄ ▄▄▄▄▄ ▄ ▄▄▄▄▄▄▄            ┃
+┃  █ ▄▄▄ █ ▀▀█ ▄▄█ ▀ █ ▄▄▄ █            ┃
+┃  █ ███ █ ▄▄█ ▀█▀▀▄ █ ███ █            ┃
+┃  █▄▄▄▄▄█ █ ▄ █▀█ ▄ █▄▄▄▄▄█            ┃
+┃  ▄▄▄  ▄▄ █▄█▄█  ▄ ▄▄▄▄  ▄▄            ┃
+┃  █ ▀ ██▄▀▄▀▀█▀▄▀██▄█▀ █▄▀█            ┃
+┃  ▄   ▄ ▄▀▄█  ▄  ▄ ▀▄▄ ▀  ▄            ┃
+┃  ▄█▄▀▄▄▄▄▄▄ ██ ▄█▀██▀ ▄▄▀█            ┃
+┃  ▄▄█▄▄ ▄▀  █ █ ▀▄▄████▀ ▄             ┃
+┃  ▄▄▄▄▄▄▄ ▀█ █▀█▄ █ ▄ █   █            ┃
+┃  █ ▄▄▄ █ ▀█▀▄▄  ██▄▄▄█  ▀             ┃
+┃  █ ███ █ ▄▀▄██▄  ▀█ ▄█▄▀█▄            ┃
+┃  █▄▄▄▄▄█ ████▀ ▀▄█▄█▀▀▄  ▄            ┃
+┃ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀           ┃
+┃                                         ┃
+┃ Cash App: $vtchevalier                  ┃
+┃ https://cash.app/$vtchevalier           ┃
+┃                                         ┃
+┃ Built by Victor T. Chevalier            ┃
+┃ https://github.com/VTChevalier          ┃
+┃                                         ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+```
 
 ### Help
 

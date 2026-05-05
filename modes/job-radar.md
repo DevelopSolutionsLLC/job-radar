@@ -46,7 +46,7 @@ These commands modify `config/portals.yml` so the user never has to edit YAML di
 
 ### Support
 
-- `/job-radar donate` → Run `node scripts/donate.mjs`. Shows a QR code and Cash App link.
+- `/job-radar donate` → Print the donate QR + Cash App info directly as text output (not via Bash, which collapses).
 
 ### Help
 
