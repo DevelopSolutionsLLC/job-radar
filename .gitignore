@@ -7,8 +7,10 @@ CLAUDE.md
 
 # User-specific files (copy from *.example.* to set up)
 cv.md
+cv-bullets.md
 config/portals.yml
 config/profile.yml
 data/scan-history.tsv
 data/tracker.md
 data/pipeline.md
+data/skills-queue.md

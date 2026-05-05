@@ -37,6 +37,7 @@ If you're using [Claude Code](https://claude.ai/code), the `/job-radar` skill co
 /job-radar scan                    # Scan all portals for new postings
 /job-radar discover                # Find new companies from RSS feeds
 /job-radar discover --fresh        # Sort by newest postings first
+/job-radar import cv               # Import your resume (paste, file, or LinkedIn)
 /job-radar add company "Anthropic" # Auto-detect ATS + add to scan list
 /job-radar add role "Engineer"     # Add to desired roles
 /job-radar evaluate <url>          # Score a posting against your CV

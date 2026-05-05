@@ -49,3 +49,39 @@ Write a report to `reports/{num}-{company-slug}-{date}.md` with:
 4. Recommendation: Apply / Consider / Skip
 
 Overall score = weighted average of all dimensions, on a 1-5 scale.
+
+## Skills Intelligence
+
+After scoring, perform these additional steps:
+
+### Keyword Extraction
+
+Extract all significant technical skills, tools, certifications, and domain keywords from the JD. Ignore generic terms (e.g., "team player", "communication skills"). Focus on:
+- Technologies and languages (Python, Go, Kubernetes, etc.)
+- Tools and platforms (Tenable, Splunk, AWS, etc.)
+- Domains and methodologies (CTEM, SOAR, Agile, etc.)
+- Certifications (CISSP, OSCP, AWS SA, etc.)
+- Role-specific terms (threat modeling, incident response, etc.)
+
+### Update Keyword Frequency Tracker
+
+If `cv-bullets.md` exists, update the **Keyword Frequency Tracker** table:
+- Increment count for keywords already in the table
+- Add new rows for keywords not yet tracked
+- Update "Last Seen" date to today
+
+### Skills Gap Report
+
+At the end of the evaluation report, add a **Skills Gap** section:
+
+1. **Matched skills** — JD keywords that appear in `cv.md` or have matching tags in `cv-bullets.md`
+2. **Gaps** — JD keywords that don't appear anywhere in the user's materials
+3. **Bullet suggestions** — for each gap, check if the user has adjacent experience that could be reframed. If so, suggest a new bullet for `cv-bullets.md` that honestly claims the skill. Never fabricate experience.
+
+### New Bullet Proposals
+
+If a keyword appears 3+ times in the tracker but has no matching bullet tag, flag it:
+
+> "The keyword **{keyword}** has appeared in {count} job descriptions but isn't covered by any bullet in your bank. Consider adding a bullet to one of your roles that demonstrates this skill."
+
+This turns every evaluation into a resume improvement opportunity.
