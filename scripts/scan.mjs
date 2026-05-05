@@ -4,6 +4,8 @@ import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } fr
 import yaml from 'js-yaml';
 
 const PORTALS_PATH = 'config/portals.yml';
+const PROFILE_PATH = 'config/profile.yml';
+const RESUME_PATH = 'resume.md';
 const HISTORY_PATH = 'data/scan-history.tsv';
 const PIPELINE_PATH = 'data/pipeline.md';
 const CACHE_PATH = 'data/scan-cache.json';
@@ -95,6 +97,54 @@ async function parallelFetch(tasks, limit) {
   const workers = Array.from({ length: Math.min(limit, tasks.length) }, () => worker());
   await Promise.all(workers);
   return results;
+}
+
+// --- Relevance scoring ---
+
+function loadResumeKeywords() {
+  const keywords = new Set();
+  if (existsSync(RESUME_PATH)) {
+    const text = readFileSync(RESUME_PATH, 'utf-8').toLowerCase();
+    const skillsMatch = text.match(/## skills[\s\S]*$/i);
+    if (skillsMatch) {
+      const words = skillsMatch[0].match(/[a-z][\w/.+-]+/g) || [];
+      for (const w of words) {
+        if (w.length > 2) keywords.add(w);
+      }
+    }
+  }
+  return keywords;
+}
+
+function loadTargetRoles() {
+  if (!existsSync(PROFILE_PATH)) return [];
+  try {
+    const profile = yaml.load(readFileSync(PROFILE_PATH, 'utf-8'));
+    return (profile?.targets?.roles || []).map(r => r.toLowerCase());
+  } catch { return []; }
+}
+
+function scoreRelevance(title, resumeKeywords, targetRoles) {
+  const lower = title.toLowerCase();
+  let score = 0;
+
+  for (const role of targetRoles) {
+    if (lower.includes(role.toLowerCase())) { score += 3; break; }
+    const words = role.toLowerCase().split(/\s+/);
+    const matches = words.filter(w => w.length > 3 && lower.includes(w)).length;
+    if (matches >= 2) { score += 2; break; }
+    if (matches >= 1) score += 1;
+  }
+
+  const titleWords = lower.match(/[a-z][\w/.+-]+/g) || [];
+  for (const w of titleWords) {
+    if (resumeKeywords.has(w)) score += 0.5;
+  }
+
+  if (/\b(senior|staff|principal|lead)\b/i.test(title)) score += 0.5;
+  if (/\b(manager|director|vp|head)\b/i.test(title)) score += 1;
+
+  return Math.round(score * 10) / 10;
 }
 
 // --- Adapter registry ---
@@ -248,6 +298,8 @@ if (!forceRefresh && !sourceFilter) {
 }
 
 const { urls: seenUrls, roles: seenRoles } = loadDedup();
+const resumeKeywords = loadResumeKeywords();
+const targetRoles = loadTargetRoles();
 const today = new Date().toISOString().slice(0, 10);
 
 // Ensure history file has header
@@ -312,7 +364,8 @@ for (const result of results) {
       appendFileSync(PIPELINE_PATH, `- [ ] [${job.company} — ${job.title}](${job.url})\n`);
     }
 
-    newPostings.push({ company: job.company, title: job.title, url: job.url, type: result.type });
+    const relevance = scoreRelevance(job.title, resumeKeywords, targetRoles);
+    newPostings.push({ company: job.company, title: job.title, url: job.url, type: result.type, relevance });
     added++;
   }
 }
@@ -337,6 +390,37 @@ if (newPostings.length > 0) {
   }
 }
 
+// --- Company aggregation for auto-add suggestions ---
+const companyStats = new Map();
+for (const p of newPostings) {
+  const key = p.company.toLowerCase();
+  if (!companyStats.has(key)) {
+    companyStats.set(key, { name: p.company, count: 0, totalRelevance: 0, source: p.type });
+  }
+  const s = companyStats.get(key);
+  s.count++;
+  s.totalRelevance += p.relevance;
+}
+
+// Companies with 3+ matching roles that aren't in portals.yml named sections
+const trackedNames = new Set();
+for (const type of ['greenhouse', 'ashby', 'lever', 'bamboohr', 'teamtailor', 'workday']) {
+  for (const entry of config[type] || []) {
+    trackedNames.add((entry.name || '').toLowerCase());
+  }
+}
+
+const suggestAdd = [...companyStats.values()]
+  .filter(s => s.count >= 3 && !trackedNames.has(s.name.toLowerCase()))
+  .sort((a, b) => b.totalRelevance - a.totalRelevance || b.count - a.count);
+
+if (suggestAdd.length > 0) {
+  console.log(`\nCompanies worth adding (3+ matching roles, not in portals.yml):`);
+  for (const s of suggestAdd.slice(0, 10)) {
+    console.log(`  → ${s.name} — ${s.count} roles, avg relevance ${(s.totalRelevance / s.count).toFixed(1)}`);
+  }
+}
+
 // Save cache (unless dry-run or source-filtered)
 if (!dryRun && !sourceFilter) {
   const cacheData = {
@@ -348,6 +432,7 @@ if (!dryRun && !sourceFilter) {
     new_count: added,
     errors: errors.map(e => ({ source: e.source, error: e.error })),
     new_postings: newPostings,
+    suggest_add: suggestAdd.slice(0, 10).map(s => ({ name: s.name, count: s.count, avg_relevance: +(s.totalRelevance / s.count).toFixed(1) })),
   };
   saveCache(cacheData);
 }
@@ -361,6 +446,7 @@ console.log(JSON.stringify({
   duplicates,
   new_count: added,
   new_postings: newPostings,
+  suggest_add: suggestAdd.slice(0, 10).map(s => ({ name: s.name, count: s.count, avg_relevance: +(s.totalRelevance / s.count).toFixed(1) })),
 }));
 
 console.log();

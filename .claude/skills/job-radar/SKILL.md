@@ -109,45 +109,47 @@ If no subcommand is given (user just types `/job-radar` or `/job-radar help`), p
 
 After `scan` finishes (or returns cached results), do NOT just dump a summary and tell the user to go find URLs. Instead:
 
-1. **Read `config/profile.yml`** to get the user's target roles and preferences.
-2. **Parse the scan output JSON** (last line of scan output) to get the `new_postings` array with titles, companies, and URLs. If using cached results, the same data is available. Fall back to reading `data/pipeline.md` unchecked items if needed.
-3. **Rank the new postings** by relevance to the user's target roles from profile.yml. Score by:
-   - Exact title match to a target role (highest)
-   - Partial title match (contains keywords from target roles like "manager", "director", "engineer", "architect")
-   - Company reputation / recognition
-   - Seniority signals in the title (senior, staff, principal, director, VP)
-4. **Present the top 15 as a numbered list**, grouped by relevance tier:
+1. **Parse the scan output JSON** (last line of scan output) to get `new_postings` with titles, companies, URLs, and `relevance` scores. The scanner already scored each posting against the user's resume keywords and target roles. If using cached results, the same data is in `data/scan-cache.json`.
+
+2. **Sort all postings by relevance score** (highest first). The scanner scores by:
+   - Target role match from profile.yml (+3 exact, +2 partial, +1 keyword)
+   - Resume skills keyword overlap (+0.5 per matching word)
+   - Seniority signals (+1 for manager/director, +0.5 for senior/staff/principal)
+
+3. **Present the top 15 as a numbered list**, mixing named companies AND RSS-discovered companies together, ranked purely by relevance:
 
    ```
-   Best matches from this scan:
+   Best matches from this scan (ranked by resume fit):
 
-   Strong matches:
-    1. Anthropic — Manager of Applied AI Architecture
-    2. Intercom — Senior Security Engineering Manager
-    3. Stripe — Engineering Manager, Operator Tooling
-    4. Spotify — Director, ML Engineering
-
-   Good matches:
-    5. Anthropic — Senior Software Security Engineer
-    6. Cohere — Staff Engineer, Platform
-    7. Contentful — Director, Product Management
-    ...
-
-   Worth a look:
-    8. Palantir — Forward Deployed Software Engineer
-    9. GitLab — Senior Backend Engineer, AI
+    1. Anthropic — Manager of Applied AI Architecture       (relevance: 5.5)
+    2. Intercom — Senior Security Engineering Manager        (relevance: 4.5)
+    3. Vanta — Staff Security Engineer                       (relevance: 4.0) ← discovered via RSS
+    4. Stripe — Engineering Manager, Operator Tooling        (relevance: 3.5)
+    5. Contentful — Manager, Security Engineering            (relevance: 3.5)
     ...
 
    Pick a number to evaluate, or multiple (e.g., "1, 3, 5").
-   Type "all strong" to evaluate all strong matches.
+   Type "all top" to evaluate the top 5.
    Type "skip" to finish.
    ```
 
-5. **When the user picks a number**, look up the URL from pipeline.md and run the evaluate flow automatically — no need for the user to copy-paste a URL.
-6. **After each evaluation**, ask if they want to evaluate another from the list, tailor a resume for one they liked, or stop.
-7. **If the user says "all strong"**, evaluate each strong match sequentially, showing a brief score summary after each one.
+4. **If the scan found companies worth adding** (3+ matching roles, not in portals.yml), the JSON output includes a `suggest_add` array. Present these to the user:
 
-This turns scan from a data dump into an interactive session where the user goes from "scan" to "evaluate" to "tailor" without ever touching a URL.
+   ```
+   Companies worth adding to your scan list:
+    → Vanta — 5 matching roles, avg relevance 3.8
+    → Datadog — 4 matching roles, avg relevance 3.2
+
+   Want me to add any of these? (e.g., "add Vanta" or "add all")
+   ```
+
+   When the user says yes, run `node scripts/resolve-ats.mjs "<name>"` to detect the ATS and add to portals.yml — same as `/job-radar add company`.
+
+5. **When the user picks a number**, look up the URL from the postings array and run the evaluate flow automatically — no URL copy-pasting needed.
+6. **After each evaluation**, offer: evaluate another, tailor a resume for one they liked, or stop.
+7. **If the user says "all top"**, evaluate the top 5 sequentially, showing a brief score summary after each.
+
+This turns scan from a data dump into an interactive session where the user goes from "scan" to "evaluate" to "tailor" without ever touching a URL. Companies from RSS feeds sit alongside named companies — the best matches float to the top regardless of source.
 
 ### Onboarding
 
