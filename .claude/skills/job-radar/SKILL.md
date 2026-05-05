@@ -3,7 +3,26 @@ name: job-radar
 description: "Job search pipeline: scan, discover, import resume, evaluate, tailor, gaps, learn, add company/role, status, donate"
 user_invocable: true
 args: subcommand
-argument-hint: "[scan | discover | import resume | evaluate | tailor | gaps | learn | add company | add role | remove company | remove role | add feed | configure | status | check | donate | help]"
+argument-hint: |
+  scan              Scan all portals for new postings
+  scan --dry-run    Preview without writing
+  discover          Find hiring companies from RSS feeds
+  discover --fresh  Sort by newest postings
+  import resume     Import your resume (paste, PDF, file, LinkedIn)
+  evaluate <url>    Score a posting + extract skill gaps
+  tailor <url>      Build a tailored resume for a job
+  gaps              Show keyword frequency + skill gaps
+  learn             Skills to study, ranked by market demand
+  add company       Auto-detect ATS + add to scan list
+  add role          Add to desired roles
+  remove company    Remove from scan list
+  remove role       Add to excluded roles
+  add feed          Add an RSS feed
+  configure         Interactive setup wizard
+  status            Pipeline summary
+  check <url>       Verify a posting is still live
+  donate            Support the project
+  help              Show all commands
 ---
 
 # /job-radar — Job Search Pipeline
