@@ -4,6 +4,7 @@
   "description": "AI-powered job search pipeline — scan, evaluate, apply",
   "type": "module",
   "scripts": {
+    "setup": "node scripts/setup.mjs",
     "test": "node scripts/test-all.mjs",
     "scan": "node scripts/scan.mjs",
     "pdf": "node scripts/generate-pdf.mjs",

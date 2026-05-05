@@ -22,18 +22,11 @@ Job searching is broken. You spend hours on forms, lose track of what you applie
 - **Pipeline integrity** — dedup, status normalization, health checks
 - **Skill commands** — `/job-radar` slash commands so you never touch YAML or raw scripts
 
-## Setup
-
-```bash
-npm install
-npx playwright install chromium
-cp config/portals.example.yml config/portals.yml
-cp config/profile.example.yml config/profile.yml
-```
-
 ## Quick Start
 
-If you're using [Claude Code](https://claude.ai/code), the `/job-radar` skill command is the primary interface:
+Open [Claude Code](https://claude.ai/code) in this directory and run any `/job-radar` command — setup is automatic. No manual install steps needed.
+
+The `/job-radar` skill command is the primary interface:
 
 ```
 /job-radar import resume               # Import your resume (paste, file, or LinkedIn)

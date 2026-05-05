@@ -1,2 +1,17 @@
 {
+  "allowedTools": [
+    "Bash(node scripts/setup.mjs)",
+    "Bash(npm install)",
+    "Bash(npm test)",
+    "Bash(node scripts/scan.mjs*)",
+    "Bash(node scripts/discover.mjs*)",
+    "Bash(node scripts/resolve-ats.mjs*)",
+    "Bash(node scripts/generate-pdf.mjs*)",
+    "Bash(node scripts/check-liveness.mjs*)",
+    "Bash(node scripts/donate.mjs)",
+    "Bash(node scripts/verify-pipeline.mjs)",
+    "Bash(node scripts/dedup-tracker.mjs)",
+    "Bash(node scripts/normalize-statuses.mjs)",
+    "Bash(npx playwright install chromium)"
+  ]
 }

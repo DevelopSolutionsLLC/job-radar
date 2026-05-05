@@ -27,6 +27,26 @@ argument-hint: |
 
 # /job-radar — Job Search Pipeline
 
+## Before anything: first-run check
+
+Before executing ANY subcommand, silently run `node scripts/setup.mjs` and check the output:
+
+1. **If the script exits with code 1** (Node.js missing), this won't happen since you're already running — but if `node_modules/` is missing or configs are missing, the script handles it automatically.
+
+2. **If the script can't run** (e.g., `node` not found when the user runs this outside Claude Code), detect the OS yourself:
+   - Run `uname -s` (or check platform from context)
+   - macOS: check `which brew` → if found, run `brew install node` for them. If no brew, tell them: "I need to install Homebrew first to get Node.js. Want me to run the installer?" then run the Homebrew install curl command.
+   - Linux: check for `apt`, `dnf`, `pacman` → run the appropriate install command. If it needs `sudo`, tell the user: "I need to install Node.js — this will ask for your password" then suggest they type `! sudo apt install -y nodejs npm` in the prompt.
+   - Windows: check for `winget`, `choco`, `scoop` → run the install. If none found, say: "Download Node.js from nodejs.org — I'll wait. Tell me when it's installed."
+
+3. **After node is confirmed**, the setup script auto-handles: `npm install`, Playwright chromium, config file copies. These all run without prompting.
+
+4. **If `resume.md` doesn't exist**, mention it naturally: "You don't have a resume imported yet. Want to do that first? Just run `/job-radar import resume`." Don't block — let the command proceed unless it specifically needs the resume (tailor, evaluate, gaps).
+
+Only show setup output if something actually needed to be installed. If everything was already ready, proceed silently to the command.
+
+## Command routing
+
 Parse the user's subcommand and execute accordingly.
 
 If no subcommand is given (user just types `/job-radar` or `/job-radar help`), print this command reference:
