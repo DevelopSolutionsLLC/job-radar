@@ -6,8 +6,8 @@ output/
 CLAUDE.md
 
 # User-specific files (copy from *.example.* to set up)
-cv.md
-cv-bullets.md
+resume.md
+resume-bullets.md
 config/portals.yml
 config/profile.yml
 data/scan-history.tsv

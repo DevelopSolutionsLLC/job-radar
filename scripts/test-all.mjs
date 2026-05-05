@@ -144,7 +144,7 @@ if (yaml) {
 
 console.log('\n4. Required mode files');
 
-const requiredModes = ['evaluate.md', 'generate-cv.md', 'scan.md', 'job-radar.md'];
+const requiredModes = ['evaluate.md', 'generate-resume.md', 'scan.md', 'job-radar.md'];
 
 for (const mode of requiredModes) {
   if (fileExists(`modes/${mode}`)) {
@@ -182,19 +182,19 @@ if (portalsExists) {
   }
 }
 
-// -- 6. CV TEMPLATE -----------------------------------------------------------
+// -- 6. RESUME TEMPLATE -------------------------------------------------------
 
-console.log('\n6. CV template');
+console.log('\n6. Resume template');
 
-if (fileExists('templates/cv-template.html')) {
-  const html = readFileSync(join(ROOT, 'templates/cv-template.html'), 'utf-8');
+if (fileExists('templates/resume-template.html')) {
+  const html = readFileSync(join(ROOT, 'templates/resume-template.html'), 'utf-8');
   if (html.includes('<!DOCTYPE html') || html.includes('<html')) {
-    pass('templates/cv-template.html exists and contains valid HTML');
+    pass('templates/resume-template.html exists and contains valid HTML');
   } else {
-    fail('templates/cv-template.html exists but does not look like HTML');
+    fail('templates/resume-template.html exists but does not look like HTML');
   }
 } else {
-  fail('templates/cv-template.html missing');
+  fail('templates/resume-template.html missing');
 }
 
 // -- SUMMARY ------------------------------------------------------------------

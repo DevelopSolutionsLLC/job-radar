@@ -1,6 +1,6 @@
 # Evaluation Mode
 
-When evaluating a job offer, read `cv.md` and `config/profile.yml`, then score across these dimensions. Each dimension is 1-5.
+When evaluating a job offer, read `resume.md` and `config/profile.yml`, then score across these dimensions. Each dimension is 1-5.
 
 ## Scoring Dimensions
 
@@ -65,7 +65,7 @@ Extract all significant technical skills, tools, certifications, and domain keyw
 
 ### Update Keyword Frequency Tracker
 
-If `cv-bullets.md` exists, update the **Keyword Frequency Tracker** table:
+If `resume-bullets.md` exists, update the **Keyword Frequency Tracker** table:
 - Increment count for keywords already in the table
 - Add new rows for keywords not yet tracked
 - Update "Last Seen" date to today
@@ -74,9 +74,9 @@ If `cv-bullets.md` exists, update the **Keyword Frequency Tracker** table:
 
 At the end of the evaluation report, add a **Skills Gap** section:
 
-1. **Matched skills** — JD keywords that appear in `cv.md` or have matching tags in `cv-bullets.md`
+1. **Matched skills** — JD keywords that appear in `resume.md` or have matching tags in `resume-bullets.md`
 2. **Gaps** — JD keywords that don't appear anywhere in the user's materials
-3. **Bullet suggestions** — for each gap, check if the user has adjacent experience that could be reframed. If so, suggest a new bullet for `cv-bullets.md` that honestly claims the skill. Never fabricate experience.
+3. **Bullet suggestions** — for each gap, check if the user has adjacent experience that could be reframed. If so, suggest a new bullet for `resume-bullets.md` that honestly claims the skill. Never fabricate experience.
 
 ### New Bullet Proposals
 

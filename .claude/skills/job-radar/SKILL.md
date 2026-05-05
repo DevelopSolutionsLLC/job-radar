@@ -1,9 +1,9 @@
 ---
 name: job-radar
-description: "Job search pipeline: scan, discover, import cv, evaluate, tailor, gaps, learn, add company/role, status, donate"
+description: "Job search pipeline: scan, discover, import resume, evaluate, tailor, gaps, learn, add company/role, status, donate"
 user_invocable: true
 args: subcommand
-argument-hint: "[scan | discover | import cv | evaluate | tailor | gaps | learn | add company | add role | remove company | remove role | add feed | configure | status | check | donate | help]"
+argument-hint: "[scan | discover | import resume | evaluate | tailor | gaps | learn | add company | add role | remove company | remove role | add feed | configure | status | check | donate | help]"
 ---
 
 # /job-radar — Job Search Pipeline
@@ -25,9 +25,9 @@ If no subcommand is given (user just types `/job-radar` or `/job-radar help`), p
     discover --add tier1       Auto-add top-tier companies
 
   Resume & Tailoring
-    import cv                  Import resume (paste, PDF, file, LinkedIn)
-    import cv <path>           Import from a specific file
-    tailor <url>               Build a tailored CV for a specific job
+    import resume                  Import resume (paste, PDF, file, LinkedIn)
+    import resume <path>           Import from a specific file
+    tailor <url>               Build a tailored resume for a specific job
     gaps                       Show keyword frequency + skill gaps
     learn                      Skills to study, ranked by market demand
 
@@ -65,8 +65,8 @@ If no subcommand is given (user just types `/job-radar` or `/job-radar help`), p
 
 ### Onboarding
 
-- `/job-radar import cv` → Import the user's resume into `cv.md`. See **Import CV** implementation below.
-- `/job-radar import cv <path>` → Import from a specific file (PDF, DOCX, TXT, HTML, MD).
+- `/job-radar import resume` → Import the user's resume into `resume.md`. See **Import Resume** implementation below.
+- `/job-radar import resume <path>` → Import from a specific file (PDF, DOCX, TXT, HTML, MD).
 
 ### Configuration
 
@@ -81,15 +81,15 @@ These commands modify `config/portals.yml` so the user never has to edit YAML di
 
 ### Pipeline
 
-- `/job-radar evaluate <url>` → Read `modes/evaluate.md`, fetch the JD, score against cv.md, write evaluation report to reports/. Also extracts keywords, updates the frequency tracker in `cv-bullets.md`, and reports skills gaps with bullet suggestions.
-- `/job-radar gaps` → Show the current keyword frequency tracker from `cv-bullets.md` and highlight any keywords with 3+ appearances that have no matching bullet tags.
+- `/job-radar evaluate <url>` → Read `modes/evaluate.md`, fetch the JD, score against resume.md, write evaluation report to reports/. Also extracts keywords, updates the frequency tracker in `resume-bullets.md`, and reports skills gaps with bullet suggestions.
+- `/job-radar gaps` → Show the current keyword frequency tracker from `resume-bullets.md` and highlight any keywords with 3+ appearances that have no matching bullet tags.
 - `/job-radar learn` → Show `data/skills-queue.md` — the prioritized list of skills to learn, sorted by JD count. Update statuses interactively.
 - `/job-radar status` → Show pipeline summary from data/tracker.md and data/pipeline.md: counts of pending, evaluated, applied, interviewed, offered, rejected.
 - `/job-radar check <url>` → Run `node scripts/check-liveness.mjs <url>` to verify a posting is still live.
 
 ### Tailoring
 
-- `/job-radar tailor <url>` → Read the JD, match against `cv-bullets.md`, assemble a tailored CV. See **Tailor CV** implementation below.
+- `/job-radar tailor <url>` → Read the JD, match against `resume-bullets.md`, assemble a tailored resume. See **Tailor Resume** implementation below.
 
 ### Support
 
@@ -142,9 +142,9 @@ For `add company`:
 4. Otherwise, add to the correct section in portals.yml based on `type`
 5. Confirm: "Added <name> (<type>) to your scan list."
 
-## Import CV
+## Import Resume
 
-When the user runs `/job-radar import cv`, follow this flow:
+When the user runs `/job-radar import resume`, follow this flow:
 
 ### Step 1 — Get the resume
 
@@ -167,9 +167,9 @@ Based on the input:
 - **File path**: use the Read tool to read the file (works with PDF, TXT, MD, HTML). For DOCX files, try reading — if it's garbled binary, tell the user to save as PDF or paste the text instead.
 - **LinkedIn URL**: use WebFetch to read the public profile page. Extract name, headline, experience, education, skills. If the profile isn't public, tell the user and ask them to paste instead.
 
-### Step 3 — Convert to cv.md format
+### Step 3 — Convert to resume.md format
 
-Restructure the content into this exact format (see `cv.example.md` for reference):
+Restructure the content into this exact format (see `resume.example.md` for reference):
 
 ```markdown
 # Full Name
@@ -222,25 +222,25 @@ Rules for conversion:
 
 ### Step 4 — Write and confirm
 
-1. Write the converted CV to `cv.md`
+1. Write the converted resume to `resume.md`
 2. Show the user a summary of what was imported:
    - Name
    - Number of positions found
    - Number of skills extracted
    - Anything that looked unclear or was dropped
-3. Ask: "Does this look right? You can edit `cv.md` directly or tell me what to change."
+3. Ask: "Does this look right? You can edit `resume.md` directly or tell me what to change."
 
 ### Step 5 — Set up profile (if not already done)
 
 If `config/profile.yml` doesn't exist yet, offer to create it:
 
-> "Want me to set up your profile too? I can create `config/profile.yml` with your name, location, and target roles based on your CV."
+> "Want me to set up your profile too? I can create `config/profile.yml` with your name, location, and target roles based on your resume."
 
 If they agree, create `config/profile.yml` from `config/profile.example.yml` with their details filled in.
 
-## Tailor CV
+## Tailor Resume
 
-When the user runs `/job-radar tailor <url>`, auto-assemble a targeted CV from the bullet bank.
+When the user runs `/job-radar tailor <url>`, auto-assemble a targeted resume from the bullet bank.
 
 ### Step 1 — Fetch and analyze the JD
 
@@ -254,11 +254,11 @@ When the user runs `/job-radar tailor <url>`, auto-assemble a targeted CV from t
 
 ### Step 2 — Gap check (interactive)
 
-Compare the JD's required skills/keywords against `cv.md` and `cv-bullets.md` tags. Identify:
+Compare the JD's required skills/keywords against `resume.md` and `resume-bullets.md` tags. Identify:
 - **Covered** — keyword matches existing bullets or skills
 - **Gaps** — keyword doesn't appear anywhere in the user's materials
 
-If there are gaps, present them to the user BEFORE assembling the CV:
+If there are gaps, present them to the user BEFORE assembling the resume:
 
 > **These skills from the JD aren't in your resume yet:**
 >
@@ -270,9 +270,9 @@ If there are gaps, present them to the user BEFORE assembling the CV:
 
 For each skill the user confirms:
 1. The user can give a quick blurb — a sentence or two about what they did. It doesn't need to be polished.
-2. Claude rewrites it as a resume bullet that matches both the JD's language and the tone/style of the user's existing bullets in `cv-bullets.md`. Show the draft and let them approve or adjust.
-3. Add the approved bullet to the appropriate role section in `cv-bullets.md` with updated tags.
-4. Add the skill to the relevant category in `cv.md`'s Skills section.
+2. Claude rewrites it as a resume bullet that matches both the JD's language and the tone/style of the user's existing bullets in `resume-bullets.md`. Show the draft and let them approve or adjust.
+3. Add the approved bullet to the appropriate role section in `resume-bullets.md` with updated tags.
+4. Add the skill to the relevant category in `resume.md`'s Skills section.
 
 For each skill the user says "skip" (they don't have it):
 1. Don't just note the gap — suggest a way to close it.
@@ -299,7 +299,7 @@ This turns every "skip" into a growth opportunity. The skills queue is the learn
 
 ### Step 3 — Select summary paragraph
 
-Read `cv-bullets.md` and pick the best summary paragraph based on role level + domain:
+Read `resume-bullets.md` and pick the best summary paragraph based on role level + domain:
 - IC/Staff/Principal → Summary #4
 - Manager/Senior Manager + Security → Summary #1
 - Manager/Senior Manager + Platform/Product → Summary #2
@@ -310,7 +310,7 @@ If the user's experience from Step 2 changes the framing (e.g., they revealed st
 
 ### Step 4 — Match bullets to JD keywords
 
-For each position in `cv-bullets.md`:
+For each position in `resume-bullets.md`:
 1. Read the `<!-- tags: ... -->` comments on each bullet section
 2. Score each section by how many JD keywords match its tags (including any new bullets from Step 2)
 3. Pick the 4-6 highest-scoring bullets per position
@@ -318,12 +318,12 @@ For each position in `cv-bullets.md`:
 
 ### Step 5 — Reorder skills
 
-Read the Skills section from `cv-bullets.md`. Reorder skill categories to front-load whatever the JD emphasizes most. Within each category, lead with the specific tools/technologies the JD mentions.
+Read the Skills section from `resume-bullets.md`. Reorder skill categories to front-load whatever the JD emphasizes most. Within each category, lead with the specific tools/technologies the JD mentions.
 
 ### Step 6 — Assemble and write
 
 1. Combine: Contact → Selected Summary → Tailored positions → Education → Reordered Skills
-2. Write to `output/cv-tailored-{company-slug}-{date}.md`
+2. Write to `output/resume-tailored-{company-slug}-{date}.md`
 3. Show the user a diff summary:
    - Which summary was picked
    - Which bullet categories were chosen per role
@@ -333,6 +333,6 @@ Read the Skills section from `cv-bullets.md`. Reorder skill categories to front-
 
 ### Step 7 — Update keyword tracker
 
-Append the JD's keywords to the **Keyword Frequency Tracker** table in `cv-bullets.md`. Increment count if the keyword already exists, add a new row if not. Update the "Last Seen" date.
+Append the JD's keywords to the **Keyword Frequency Tracker** table in `resume-bullets.md`. Increment count if the keyword already exists, add a new row if not. Update the "Last Seen" date.
 
 This tracks which skills employers ask for most, so the user can see which bullets are doing heavy lifting and which skills to invest in.

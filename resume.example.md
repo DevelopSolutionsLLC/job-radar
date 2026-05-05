@@ -41,4 +41,4 @@
 
 ---
 
-*To set up: copy this file to `cv.md` and fill in your details. The evaluation engine (`modes/evaluate.md`) scores job postings against your CV, so the more specific you are about your skills and experience, the better the scoring.*
+*To set up: copy this file to `resume.md` and fill in your details. The evaluation engine (`modes/evaluate.md`) scores job postings against your resume, so the more specific you are about your skills and experience, the better the scoring.*

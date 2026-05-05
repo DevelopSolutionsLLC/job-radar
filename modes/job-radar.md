@@ -18,8 +18,8 @@ Parse the user's subcommand and execute accordingly. If no subcommand is given, 
 
 ### Onboarding
 
-- `/job-radar import cv` → Import the user's resume into `cv.md`. Accepts pasted text, file path (PDF, DOCX, TXT, HTML, MD), or LinkedIn URL.
-- `/job-radar import cv <path>` → Import from a specific file.
+- `/job-radar import resume` → Import the user's resume into `resume.md`. Accepts pasted text, file path (PDF, DOCX, TXT, HTML, MD), or LinkedIn URL.
+- `/job-radar import resume <path>` → Import from a specific file.
 
 ### Configuration
 
@@ -34,7 +34,7 @@ These commands modify `config/portals.yml` so the user never has to edit YAML di
 
 ### Pipeline
 
-- `/job-radar evaluate <url>` → Read `modes/evaluate.md`, fetch the JD, score against cv.md, write evaluation report. Also extracts keywords, updates the frequency tracker in `cv-bullets.md`, and reports skills gaps with bullet suggestions.
+- `/job-radar evaluate <url>` → Read `modes/evaluate.md`, fetch the JD, score against resume.md, write evaluation report. Also extracts keywords, updates the frequency tracker in `resume-bullets.md`, and reports skills gaps with bullet suggestions.
 - `/job-radar gaps` → Show keyword frequency tracker and highlight gaps — keywords appearing 3+ times with no matching bullet.
 - `/job-radar learn` → Show the skills queue (`data/skills-queue.md`) — what to study next, prioritized by market demand. Update statuses interactively.
 - `/job-radar status` → Show pipeline summary from data/tracker.md and data/pipeline.md: counts of pending, evaluated, applied, interviewed, offered, rejected.
@@ -42,7 +42,7 @@ These commands modify `config/portals.yml` so the user never has to edit YAML di
 
 ### Tailoring
 
-- `/job-radar tailor <url>` → Fetch JD, match against `cv-bullets.md`, auto-assemble a tailored CV with the best summary + bullets for that role. Writes to `output/cv-tailored-{company}-{date}.md`. Tracks keyword frequency over time.
+- `/job-radar tailor <url>` → Fetch JD, match against `resume-bullets.md`, auto-assemble a tailored resume with the best summary + bullets for that role. Writes to `output/resume-tailored-{company}-{date}.md`. Tracks keyword frequency over time.
 
 ### Support
 
