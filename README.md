@@ -4,11 +4,11 @@
 
 Built by [Victor T. Chevalier](https://github.com/VTChevalier).
 
-## Why
+## **Why**
 
 Job searching is broken. You spend hours on forms, lose track of what you applied to, and never know if a listing is even still open. job-radar automates the grunt work so you can focus on the roles that actually matter.
 
-## Features
+## **Features**
 
 - **Smart scanner** — adapter registry scans Greenhouse, Ashby, Lever, BambooHR, Teamtailor, Workday APIs + RSS feeds, all in parallel
 - **Discovery engine** — finds companies actively hiring for your target roles, tiers them by signal strength and freshness
@@ -23,7 +23,7 @@ Job searching is broken. You spend hours on forms, lose track of what you applie
 - **Zero-config setup** — first `/job-radar` command auto-installs everything, detects your OS, no manual steps
 - **Skill commands** — `/job-radar` slash commands so you never touch YAML or raw scripts
 
-## Quick Start
+## **Quick Start**
 
 Open [Claude Code](https://claude.ai/code) in this directory and run any `/job-radar` command — setup is automatic. No manual install steps needed.
 
@@ -44,7 +44,7 @@ The `/job-radar` skill command is the primary interface:
 /job-radar donate                  # Support the project
 ```
 
-## CLI Commands
+## **CLI Commands**
 
 ```bash
 npm run setup         # First-run setup (auto-runs on /job-radar)
@@ -59,36 +59,36 @@ npm run normalize     # Fix non-canonical statuses
 npm run liveness      # Check if a posting is still live
 ```
 
-## How It Works
+## **How It Works**
 
 ```
-                    ┌──────────────────────────────────────┐
-                    │      /job-radar import resume         │
-                    │    paste / PDF / file / LinkedIn      │
-                    └─────────────────┬────────────────────┘
-                                   ▼
-                              resume.md + resume-bullets.md
-                                   │
-┌──────────────┐                   │
-│  RSS feeds   │──→ discover.mjs ──→ tier companies ──→ resolve ATS
-└──────────────┘                                           │
-                                                           ▼
-portals.yml ──→ scan.mjs ──→ filter + dedup ──→ pipeline.md
+         ┌────────────────────────────────────┐
+         │      /job-radar import resume       │
+         │    paste / PDF / file / LinkedIn     │
+         └────────────────┬───────────────────┘
+                          ▼
+                 resume.md + resume-bullets.md
+                          │
+   ┌────────────┐         │
+   │ RSS feeds  │──→ discover.mjs ──→ tier ──→ resolve ATS
+   └────────────┘                                   │
+                                                    ▼
+      portals.yml ──→ scan.mjs ──→ dedup ──→ pipeline.md
                                                     │
-                          evaluate ←── pick a role ←─┘
-                              │
-                    ┌─────────┴──────────┐
-                    ▼                    ▼
-             write report          skills gaps
-                    │                    │
-                    ▼                    ▼
-        /job-radar tailor        /job-radar learn
-                    │                    │
-                    ▼                    ▼
-          tailored resume PDF        skills-queue.md
+                        evaluate ←── pick a role ←──┘
+                            │
+                  ┌─────────┴─────────┐
+                  ▼                   ▼
+           write report         skills gaps
+                  │                   │
+                  ▼                   ▼
+      /job-radar tailor       /job-radar learn
+                  │                   │
+                  ▼                   ▼
+        tailored resume         skills-queue.md
 ```
 
-## Structure
+## **Structure**
 
 ```
 .claude/skills/  /job-radar skill definition (auto-discovered)
@@ -101,42 +101,28 @@ templates/       Resume template (HTML)
 output/          Generated PDFs + tailored resumes (gitignored)
 ```
 
-## Scanner Sources
+## **Scanner Sources**
 
 All ATS platforms use a single adapter registry — adding a new source is one object:
 
 | Source | Method | Auth |
-|--------|--------|------|
-| Greenhouse | REST API | None |
-| Ashby | REST API | None |
-| Lever | REST API | None |
-| BambooHR | REST API | None |
+|:-----------|:-----------|:-----|
+| Greenhouse | REST API   | None |
+| Ashby      | REST API   | None |
+| Lever      | REST API   | None |
+| BambooHR   | REST API   | None |
 | Teamtailor | Native RSS | None |
-| Workday | JSON POST | None |
-| RSS feeds | Standard RSS | None |
+| Workday    | JSON POST  | None |
+| RSS feeds  | Standard RSS | None |
 
-## Support
+## **Support**
 
 If job-radar helped you land a role, consider buying me a coffee:
 
-```
- ▄▄▄▄▄▄▄ ▄ ▄▄▄▄▄ ▄ ▄▄▄▄▄▄▄
- █ ▄▄▄ █ ▀▀█ ▄▄█ ▀ █ ▄▄▄ █
- █ ███ █ ▄▄█ ▀█▀▀▄ █ ███ █
- █▄▄▄▄▄█ █ ▄ █▀█ ▄ █▄▄▄▄▄█
- ▄▄▄  ▄▄ █▄█▄█  ▄ ▄▄▄▄  ▄▄
- █ ▀ ██▄▀▄▀▀█▀▄▀██▄█▀ █▄▀█
- ▄   ▄ ▄▀▄█  ▄  ▄ ▀▄▄ ▀  ▄
- ▄█▄▀▄▄▄▄▄▄ ██ ▄█▀██▀ ▄▄▀█
- ▄▄█▄▄ ▄▀  █ █ ▀▄▄████▀ ▄
- ▄▄▄▄▄▄▄ ▀█ █▀█▄ █ ▄ █   █
- █ ▄▄▄ █ ▀█▀▄▄  ██▄▄▄█  ▀
- █ ███ █ ▄▀▄██▄  ▀█ ▄█▄▀█▄
- █▄▄▄▄▄█ ████▀ ▀▄█▄█▀▀▄  ▄
-```
+<a href="https://cash.app/$vtchevalier"><img src="assets/qr-cashapp.png" alt="Cash App QR code" width="200"></a>
 
 **Cash App:** [`$vtchevalier`](https://cash.app/$vtchevalier)
 
-## License
+## **License**
 
 MIT — Victor T. Chevalier
