@@ -20,6 +20,7 @@ Job searching is broken. You spend hours on forms, lose track of what you applie
 - **Offer evaluation** — weighted scoring across 6 dimensions against your resume
 - **Liveness checker** — verifies postings are still open before you waste time
 - **Pipeline integrity** — dedup, status normalization, health checks
+- **Zero-config setup** — first `/job-radar` command auto-installs everything, detects your OS, no manual steps
 - **Skill commands** — `/job-radar` slash commands so you never touch YAML or raw scripts
 
 ## Quick Start
@@ -46,7 +47,8 @@ The `/job-radar` skill command is the primary interface:
 ## CLI Commands
 
 ```bash
-npm test              # Run 27-check test suite
+npm run setup         # First-run setup (auto-runs on /job-radar)
+npm test              # Run 28-check test suite
 npm run scan          # Scan portals for new postings
 npm run discover      # Discovery engine — find hiring companies
 npm run resolve       # Auto-detect a company's ATS
@@ -60,10 +62,10 @@ npm run liveness      # Check if a posting is still live
 ## How It Works
 
 ```
-                    ┌─────────────────────────────────────────┐
-                    │           /job-radar import resume           │
-                    │     paste / PDF / file / LinkedIn        │
-                    └──────────────┬──────────────────────────┘
+                    ┌──────────────────────────────────────┐
+                    │      /job-radar import resume         │
+                    │    paste / PDF / file / LinkedIn      │
+                    └─────────────────┬────────────────────┘
                                    ▼
                               resume.md + resume-bullets.md
                                    │
@@ -117,7 +119,23 @@ All ATS platforms use a single adapter registry — adding a new source is one o
 
 If job-radar helped you land a role, consider buying me a coffee:
 
-**Cash App:** `$vtchevalier`
+```
+ ▄▄▄▄▄▄▄ ▄ ▄▄▄▄▄ ▄ ▄▄▄▄▄▄▄
+ █ ▄▄▄ █ ▀▀█ ▄▄█ ▀ █ ▄▄▄ █
+ █ ███ █ ▄▄█ ▀█▀▀▄ █ ███ █
+ █▄▄▄▄▄█ █ ▄ █▀█ ▄ █▄▄▄▄▄█
+ ▄▄▄  ▄▄ █▄█▄█  ▄ ▄▄▄▄  ▄▄
+ █ ▀ ██▄▀▄▀▀█▀▄▀██▄█▀ █▄▀█
+ ▄   ▄ ▄▀▄█  ▄  ▄ ▀▄▄ ▀  ▄
+ ▄█▄▀▄▄▄▄▄▄ ██ ▄█▀██▀ ▄▄▀█
+ ▄▄█▄▄ ▄▀  █ █ ▀▄▄████▀ ▄
+ ▄▄▄▄▄▄▄ ▀█ █▀█▄ █ ▄ █   █
+ █ ▄▄▄ █ ▀█▀▄▄  ██▄▄▄█  ▀
+ █ ███ █ ▄▀▄██▄  ▀█ ▄█▄▀█▄
+ █▄▄▄▄▄█ ████▀ ▀▄█▄█▀▀▄  ▄
+```
+
+**Cash App:** [`$vtchevalier`](https://cash.app/$vtchevalier)
 
 ## License
 
