@@ -9,8 +9,8 @@ argument-hint: |
   discover          Find hiring companies from RSS feeds
   discover --fresh  Sort by newest postings
   import resume     Import your resume (paste, PDF, file, LinkedIn)
-  evaluate <url>    Score a posting + extract skill gaps
-  tailor <url>      Build a tailored resume for a job
+  evaluate          Score a posting (pick from list, URL, or company name)
+  tailor            Build a tailored resume (pick from list, URL, or company name)
   gaps              Show keyword frequency + skill gaps
   learn             Skills to study, ranked by market demand
   add company       Auto-detect ATS + add to scan list
@@ -55,7 +55,7 @@ If no subcommand is given (user just types `/job-radar` or `/job-radar help`), p
 /job-radar — Job Search Pipeline
 
   Scanning & Discovery
-    scan                       Scan all portals for new postings
+    scan                       Scan portals → pick best matches → evaluate
     scan --dry-run             Preview without writing
     scan --source <type>       Scan one ATS type only
     discover                   Find hiring companies from RSS feeds
@@ -64,9 +64,9 @@ If no subcommand is given (user just types `/job-radar` or `/job-radar help`), p
     discover --add tier1       Auto-add top-tier companies
 
   Resume & Tailoring
-    import resume                  Import resume (paste, PDF, file, LinkedIn)
-    import resume <path>           Import from a specific file
-    tailor <url>               Build a tailored resume for a specific job
+    import resume              Import resume (paste, PDF, file, LinkedIn)
+    import resume <path>       Import from a specific file
+    tailor                     Build a tailored resume (pick from list or give URL)
     gaps                       Show keyword frequency + skill gaps
     learn                      Skills to study, ranked by market demand
 
@@ -79,7 +79,7 @@ If no subcommand is given (user just types `/job-radar` or `/job-radar help`), p
     configure                  Interactive setup wizard
 
   Pipeline
-    evaluate <url>             Score a posting + extract skill gaps
+    evaluate                   Score a posting (pick from list or give URL)
     status                     Pipeline summary (pending/applied/etc.)
     check <url>                Verify a posting is still live
 
@@ -92,8 +92,8 @@ If no subcommand is given (user just types `/job-radar` or `/job-radar help`), p
 
 ### Discovery & Scanning
 
-- `/job-radar scan` → Run `node scripts/scan.mjs`. Show the structured summary to the user.
-- `/job-radar scan --dry-run` → Run `node scripts/scan.mjs --dry-run`. Preview only.
+- `/job-radar scan` → Run `node scripts/scan.mjs`. After the scan completes, follow the **Post-scan interactive flow** below.
+- `/job-radar scan --dry-run` → Run `node scripts/scan.mjs --dry-run`. Preview only, no interactive flow.
 - `/job-radar scan --source <type>` → Scan only one ATS type (greenhouse, ashby, lever, etc.)
 - `/job-radar discover` → Run `node scripts/discover.mjs`. Show tiered results.
 - `/job-radar discover --top N` → Show top N per tier.
@@ -101,6 +101,50 @@ If no subcommand is given (user just types `/job-radar` or `/job-radar help`), p
 - `/job-radar discover --add all` → Auto-add all discovered companies.
 - `/job-radar discover --fresh` → Sort by newest postings first (just posted = top).
 - `/job-radar discover --urgent` → Sort by longest-open roles first (desperate to hire).
+
+#### Post-scan interactive flow
+
+After `scan` finishes and results are written to `data/pipeline.md`, do NOT just dump a summary and tell the user to go find URLs. Instead:
+
+1. **Read `config/profile.yml`** to get the user's target roles and preferences.
+2. **Read `data/pipeline.md`** and find the NEW postings that were just added (unchecked `- [ ]` items).
+3. **Rank the new postings** by relevance to the user's target roles from profile.yml. Score by:
+   - Exact title match to a target role (highest)
+   - Partial title match (contains keywords from target roles like "manager", "director", "engineer", "architect")
+   - Company reputation / recognition
+   - Seniority signals in the title (senior, staff, principal, director, VP)
+4. **Present the top 15 as a numbered list**, grouped by relevance tier:
+
+   ```
+   Best matches from this scan:
+
+   Strong matches:
+    1. Anthropic — Manager of Applied AI Architecture
+    2. Intercom — Senior Security Engineering Manager
+    3. Stripe — Engineering Manager, Operator Tooling
+    4. Spotify — Director, ML Engineering
+
+   Good matches:
+    5. Anthropic — Senior Software Security Engineer
+    6. Cohere — Staff Engineer, Platform
+    7. Contentful — Director, Product Management
+    ...
+
+   Worth a look:
+    8. Palantir — Forward Deployed Software Engineer
+    9. GitLab — Senior Backend Engineer, AI
+    ...
+
+   Pick a number to evaluate, or multiple (e.g., "1, 3, 5").
+   Type "all strong" to evaluate all strong matches.
+   Type "skip" to finish.
+   ```
+
+5. **When the user picks a number**, look up the URL from pipeline.md and run the evaluate flow automatically — no need for the user to copy-paste a URL.
+6. **After each evaluation**, ask if they want to evaluate another from the list, tailor a resume for one they liked, or stop.
+7. **If the user says "all strong"**, evaluate each strong match sequentially, showing a brief score summary after each one.
+
+This turns scan from a data dump into an interactive session where the user goes from "scan" to "evaluate" to "tailor" without ever touching a URL.
 
 ### Onboarding
 
@@ -120,7 +164,7 @@ These commands modify `config/portals.yml` so the user never has to edit YAML di
 
 ### Pipeline
 
-- `/job-radar evaluate <url>` → Read `modes/evaluate.md`, fetch the JD, score against resume.md, write evaluation report to reports/. Also extracts keywords, updates the frequency tracker in `resume-bullets.md`, and reports skills gaps with bullet suggestions.
+- `/job-radar evaluate <url or number>` → If the user provides a number (from the post-scan list) or a company name, look up the URL from `data/pipeline.md`. If they provide a URL, use it directly. Then read `modes/evaluate.md`, fetch the JD, score against resume.md, write evaluation report to reports/. Also extracts keywords, updates the frequency tracker in `resume-bullets.md`, and reports skills gaps with bullet suggestions. After evaluation, offer: "Want to tailor a resume for this one? Or pick another from the list?"
 - `/job-radar gaps` → Show the current keyword frequency tracker from `resume-bullets.md` and highlight any keywords with 3+ appearances that have no matching bullet tags.
 - `/job-radar learn` → Show `data/skills-queue.md` — the prioritized list of skills to learn, sorted by JD count. Update statuses interactively.
 - `/job-radar status` → Show pipeline summary from data/tracker.md and data/pipeline.md: counts of pending, evaluated, applied, interviewed, offered, rejected.
@@ -128,7 +172,7 @@ These commands modify `config/portals.yml` so the user never has to edit YAML di
 
 ### Tailoring
 
-- `/job-radar tailor <url>` → Read the JD, match against `resume-bullets.md`, assemble a tailored resume. See **Tailor Resume** implementation below.
+- `/job-radar tailor <url or number>` → If the user provides a number (from the post-scan list) or a company name, look up the URL from `data/pipeline.md`. If they provide a URL, use it directly. Then read the JD, match against `resume-bullets.md`, assemble a tailored resume. See **Tailor Resume** implementation below.
 
 ### Support
 
