@@ -1,11 +1,50 @@
 ---
 name: job-radar
-description: Job search pipeline — scan, discover, evaluate, configure
+description: "Job search pipeline: scan, discover, import cv, evaluate, tailor, gaps, learn, add company/role, status, donate"
 ---
 
 # /job-radar — Job Search Pipeline
 
-Parse the user's subcommand and execute accordingly. If no subcommand is given, show available commands.
+Parse the user's subcommand and execute accordingly.
+
+If no subcommand is given (user just types `/job-radar` or `/job-radar help`), print this command reference:
+
+```
+/job-radar — Job Search Pipeline
+
+  Scanning & Discovery
+    scan                       Scan all portals for new postings
+    scan --dry-run             Preview without writing
+    scan --source <type>       Scan one ATS type only
+    discover                   Find hiring companies from RSS feeds
+    discover --fresh           Sort by newest postings
+    discover --urgent          Sort by longest-open roles
+    discover --add tier1       Auto-add top-tier companies
+
+  Resume & Tailoring
+    import cv                  Import resume (paste, PDF, file, LinkedIn)
+    import cv <path>           Import from a specific file
+    tailor <url>               Build a tailored CV for a specific job
+    gaps                       Show keyword frequency + skill gaps
+    learn                      Skills to study, ranked by market demand
+
+  Configuration
+    add company "<name>"       Auto-detect ATS + add to scan list
+    remove company "<name>"    Remove from scan list
+    add role "<title>"         Add to desired roles
+    remove role "<title>"      Add to excluded roles
+    add feed <url>             Add an RSS feed
+    configure                  Interactive setup wizard
+
+  Pipeline
+    evaluate <url>             Score a posting + extract skill gaps
+    status                     Pipeline summary (pending/applied/etc.)
+    check <url>                Verify a posting is still live
+
+  Other
+    donate                     Support the project
+    help                       Show this list
+```
 
 ## Commands
 
