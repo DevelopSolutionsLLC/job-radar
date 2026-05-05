@@ -6,11 +6,15 @@ import yaml from 'js-yaml';
 const PORTALS_PATH = 'config/portals.yml';
 const HISTORY_PATH = 'data/scan-history.tsv';
 const PIPELINE_PATH = 'data/pipeline.md';
+const CACHE_PATH = 'data/scan-cache.json';
+const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 const CONCURRENCY = 10;
 const FETCH_TIMEOUT = 10_000;
 
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
+const forceRefresh = args.includes('--force');
+const cacheOnly = args.includes('--cached');
 const sourceFilter = args.includes('--source') ? args[args.indexOf('--source') + 1] : null;
 
 mkdirSync('data', { recursive: true });
@@ -186,7 +190,62 @@ async function scanSource(type, entry) {
   }
 }
 
+// --- Cache ---
+
+function loadCache() {
+  if (!existsSync(CACHE_PATH)) return null;
+  try {
+    const cache = JSON.parse(readFileSync(CACHE_PATH, 'utf-8'));
+    const age = Date.now() - new Date(cache.timestamp).getTime();
+    cache._age = age;
+    cache._fresh = age < CACHE_TTL;
+    return cache;
+  } catch { return null; }
+}
+
+function saveCache(data) {
+  writeFileSync(CACHE_PATH, JSON.stringify(data, null, 2));
+}
+
 // --- Main ---
+
+// --cached: return cached results without scanning
+if (cacheOnly) {
+  const cache = loadCache();
+  if (cache) {
+    console.log(JSON.stringify(cache));
+  } else {
+    console.log(JSON.stringify({ cached: false, message: 'No cache found. Run a scan first.' }));
+  }
+  process.exit(0);
+}
+
+// Check cache freshness (skip if --force or --source filter)
+if (!forceRefresh && !sourceFilter) {
+  const cache = loadCache();
+  if (cache && cache._fresh) {
+    const ageMin = Math.round(cache._age / 60_000);
+    const ageStr = ageMin < 60 ? `${ageMin}m ago` : `${Math.round(ageMin / 60)}h ago`;
+    console.log(`\n${'━'.repeat(45)}`);
+    console.log(`Portal Scan — cached (${ageStr})`);
+    console.log(`${'━'.repeat(45)}`);
+    console.log(`Sources scanned:       ${cache.sources_scanned}`);
+    console.log(`Total jobs found:      ${cache.total_found}`);
+    console.log(`Filtered by title:     ${cache.filtered} removed`);
+    console.log(`Duplicates:            ${cache.duplicates} skipped`);
+    console.log(`New postings added:    ${cache.new_count}`);
+    if (cache.new_postings?.length > 0) {
+      console.log(`\nNew postings:`);
+      for (const p of cache.new_postings) {
+        console.log(`  + ${p.company} | ${p.title} | ${p.type}`);
+      }
+    }
+    console.log(`\nUsing cached results. Run with --force to refresh.\n`);
+    // Output JSON for Claude to parse
+    console.log(JSON.stringify(cache));
+    process.exit(0);
+  }
+}
 
 const { urls: seenUrls, roles: seenRoles } = loadDedup();
 const today = new Date().toISOString().slice(0, 10);
@@ -253,7 +312,7 @@ for (const result of results) {
       appendFileSync(PIPELINE_PATH, `- [ ] [${job.company} — ${job.title}](${job.url})\n`);
     }
 
-    newPostings.push({ company: job.company, title: job.title, type: result.type });
+    newPostings.push({ company: job.company, title: job.title, url: job.url, type: result.type });
     added++;
   }
 }
@@ -277,5 +336,31 @@ if (newPostings.length > 0) {
     console.log(`  + ${p.company} | ${p.title} | ${p.type}`);
   }
 }
+
+// Save cache (unless dry-run or source-filtered)
+if (!dryRun && !sourceFilter) {
+  const cacheData = {
+    timestamp: new Date().toISOString(),
+    sources_scanned: tasks.length,
+    total_found: totalFound,
+    filtered,
+    duplicates,
+    new_count: added,
+    errors: errors.map(e => ({ source: e.source, error: e.error })),
+    new_postings: newPostings,
+  };
+  saveCache(cacheData);
+}
+
+// Output JSON for Claude to parse
+console.log(JSON.stringify({
+  timestamp: new Date().toISOString(),
+  sources_scanned: tasks.length,
+  total_found: totalFound,
+  filtered,
+  duplicates,
+  new_count: added,
+  new_postings: newPostings,
+}));
 
 console.log();

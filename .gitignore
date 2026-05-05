@@ -11,6 +11,7 @@ resume-bullets.md
 config/portals.yml
 config/profile.yml
 data/scan-history.tsv
+data/scan-cache.json
 data/tracker.md
 data/pipeline.md
 data/skills-queue.md

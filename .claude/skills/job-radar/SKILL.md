@@ -4,7 +4,8 @@ description: "Job search pipeline: scan, discover, import resume, evaluate, tail
 user_invocable: true
 args: subcommand
 argument-hint: |
-  scan              Scan all portals for new postings
+  scan              Scan portals (cached 24h, pick from results)
+  scan --force      Force fresh scan, bypass cache
   scan --dry-run    Preview without writing
   discover          Find hiring companies from RSS feeds
   discover --fresh  Sort by newest postings
@@ -56,6 +57,7 @@ If no subcommand is given (user just types `/job-radar` or `/job-radar help`), p
 
   Scanning & Discovery
     scan                       Scan portals → pick best matches → evaluate
+    scan --force               Force fresh scan, bypass 24h cache
     scan --dry-run             Preview without writing
     scan --source <type>       Scan one ATS type only
     discover                   Find hiring companies from RSS feeds
@@ -92,9 +94,10 @@ If no subcommand is given (user just types `/job-radar` or `/job-radar help`), p
 
 ### Discovery & Scanning
 
-- `/job-radar scan` → Run `node scripts/scan.mjs`. After the scan completes, follow the **Post-scan interactive flow** below.
+- `/job-radar scan` → Run `node scripts/scan.mjs`. Scan results are cached for 24 hours — repeat scans within that window use cached data instead of re-fetching from ATS APIs. After results are ready (fresh or cached), follow the **Post-scan interactive flow** below.
+- `/job-radar scan --force` → Force a fresh scan, bypassing the 24-hour cache.
 - `/job-radar scan --dry-run` → Run `node scripts/scan.mjs --dry-run`. Preview only, no interactive flow.
-- `/job-radar scan --source <type>` → Scan only one ATS type (greenhouse, ashby, lever, etc.)
+- `/job-radar scan --source <type>` → Scan only one ATS type (greenhouse, ashby, lever, etc.). Always fetches fresh (cache is per-full-scan).
 - `/job-radar discover` → Run `node scripts/discover.mjs`. Show tiered results.
 - `/job-radar discover --top N` → Show top N per tier.
 - `/job-radar discover --add tier1` → Auto-add tier 1 companies to portals.yml via ATS detection.
@@ -104,10 +107,10 @@ If no subcommand is given (user just types `/job-radar` or `/job-radar help`), p
 
 #### Post-scan interactive flow
 
-After `scan` finishes and results are written to `data/pipeline.md`, do NOT just dump a summary and tell the user to go find URLs. Instead:
+After `scan` finishes (or returns cached results), do NOT just dump a summary and tell the user to go find URLs. Instead:
 
 1. **Read `config/profile.yml`** to get the user's target roles and preferences.
-2. **Read `data/pipeline.md`** and find the NEW postings that were just added (unchecked `- [ ]` items).
+2. **Parse the scan output JSON** (last line of scan output) to get the `new_postings` array with titles, companies, and URLs. If using cached results, the same data is available. Fall back to reading `data/pipeline.md` unchecked items if needed.
 3. **Rank the new postings** by relevance to the user's target roles from profile.yml. Score by:
    - Exact title match to a target role (highest)
    - Partial title match (contains keywords from target roles like "manager", "director", "engineer", "architect")
