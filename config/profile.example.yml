@@ -16,6 +16,10 @@ preferences:
   company_size: any  # startup | mid | enterprise | any
   deal_breakers: []  # e.g., ["on-site only", "no equity", "defense contractor"]
 
+resume:
+  max_pages: 2            # hard limit for tailored resumes
+  no_cross_references: true  # never mention one employer's work in another's bullets
+
 compensation:
   currency: USD
   min: 150000

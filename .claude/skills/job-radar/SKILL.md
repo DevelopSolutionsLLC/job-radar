@@ -281,6 +281,13 @@ If they agree, create `config/profile.yml` from `config/profile.example.yml` wit
 
 When the user runs `/job-radar tailor <url>`, auto-assemble a targeted resume from the bullet bank.
 
+### Resume rules (apply to all tailoring)
+
+- **2-page limit.** The final resume must fit in 2 pages. If it runs long, trim oldest roles first — recent experience matters most. Shrink roles 10+ years old to 1-2 bullets max.
+- **No cross-company references.** Each company's bullets stand alone. Never mention work at another company within a bullet (e.g., don't reference "AT&T's ASPR" in a Stratascale bullet). If a skill spans employers, describe it in the context of the company where the bullet lives.
+- **Summaries are the exception** — they can reference career span and multiple employers.
+- **Never fabricate** experience, skills, or metrics.
+
 ### Step 1 — Fetch and analyze the JD
 
 1. Use WebFetch to read the job posting URL
