@@ -10,7 +10,10 @@
     "verify": "node scripts/verify-pipeline.mjs",
     "dedup": "node scripts/dedup-tracker.mjs",
     "normalize": "node scripts/normalize-statuses.mjs",
-    "liveness": "node scripts/check-liveness.mjs"
+    "liveness": "node scripts/check-liveness.mjs",
+    "discover": "node scripts/discover.mjs",
+    "resolve": "node scripts/resolve-ats.mjs",
+    "donate": "node scripts/donate.mjs"
   },
   "keywords": ["job-search", "career", "automation"],
   "author": "Victor T. Chevalier",

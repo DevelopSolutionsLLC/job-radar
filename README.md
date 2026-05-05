@@ -1,29 +1,107 @@
 # job-radar
 
-Job search pipeline: scan portals, evaluate offers, generate tailored CVs, track applications.
+**AI-powered job search pipeline** — scan portals, discover who's hiring, evaluate offers, generate tailored CVs, and track applications.
+
+Built by [Victor T. Chevalier](https://github.com/VTChevalier).
+
+## Why
+
+Job searching is broken. You spend hours on forms, lose track of what you applied to, and never know if a listing is even still open. job-radar automates the grunt work so you can focus on the roles that actually matter.
+
+## Features
+
+- **Smart scanner** — adapter registry scans Greenhouse, Ashby, Lever, BambooHR, Teamtailor, Workday APIs + RSS feeds, all in parallel
+- **Discovery engine** — finds companies actively hiring for your target roles, tiers them by signal strength and freshness
+- **ATS auto-detection** — give it a company name, it figures out which job board they use
+- **Offer evaluation** — weighted scoring across 6 dimensions against your CV
+- **Tailored CVs** — ATS-optimized PDFs customized per job description
+- **Liveness checker** — verifies postings are still open before you waste time
+- **Pipeline integrity** — dedup, status normalization, health checks
+- **Skill commands** — `/job-radar` slash commands so you never touch YAML or raw scripts
+- **Skills progression** *(coming soon)* — track what you're learning, prioritize by hire impact
 
 ## Setup
 
 ```bash
 npm install
 npx playwright install chromium
+cp config/portals.example.yml config/portals.yml
+cp config/profile.example.yml config/profile.yml
 ```
 
-## Usage
+## Quick Start
 
-1. Add your CV to `cv.md`
-2. Configure your profile in `config/profile.yml`
-3. Set up portals in `config/portals.yml`
-4. Paste a job URL to evaluate, or run the scanner
+If you're using [Claude Code](https://claude.ai/code), the `/job-radar` skill command is the primary interface:
+
+```
+/job-radar scan                    # Scan all portals for new postings
+/job-radar discover                # Find new companies from RSS feeds
+/job-radar discover --fresh        # Sort by newest postings first
+/job-radar add company "Anthropic" # Auto-detect ATS + add to scan list
+/job-radar add role "Engineer"     # Add to desired roles
+/job-radar evaluate <url>          # Score a posting against your CV
+/job-radar status                  # Pipeline summary
+/job-radar donate                  # Support the project
+```
+
+## CLI Commands
+
+```bash
+npm test              # Run 26-check test suite
+npm run scan          # Scan portals for new postings
+npm run discover      # Discovery engine — find hiring companies
+npm run resolve       # Auto-detect a company's ATS
+npm run pdf           # Generate CV PDF
+npm run verify        # Pipeline health check
+npm run dedup         # Remove duplicate tracker entries
+npm run normalize     # Fix non-canonical statuses
+npm run liveness      # Check if a posting is still live
+```
+
+## How It Works
+
+```
+RSS feeds ──→ discover.mjs ──→ tier companies ──→ resolve ATS
+                                                       │
+portals.yml ──→ scan.mjs ──→ filter + dedup ──→ pipeline.md
+                                                       │
+                              evaluate ←── pick a role ←┘
+                                  │
+                            write report ──→ generate CV PDF
+```
 
 ## Structure
 
 ```
-config/         # profile, portals, preferences
-modes/          # evaluation rubrics and prompts
-templates/      # CV template (HTML)
-scripts/        # automation (scanner, PDF gen)
-data/           # tracker, pipeline inbox, scan history
-reports/        # evaluation reports
-output/         # generated PDFs (gitignored)
+config/         Profile, portals, preferences
+modes/          Agent instructions (evaluate, scan, job-radar skill)
+scripts/        Automation (scanner, discovery, PDF gen, liveness, pipeline tools)
+data/           Tracker, pipeline inbox, scan history, discovered companies
+reports/        Evaluation reports
+templates/      CV template (HTML)
+output/         Generated PDFs (gitignored)
 ```
+
+## Scanner Sources
+
+All ATS platforms use a single adapter registry — adding a new source is one object:
+
+| Source | Method | Auth |
+|--------|--------|------|
+| Greenhouse | REST API | None |
+| Ashby | REST API | None |
+| Lever | REST API | None |
+| BambooHR | REST API | None |
+| Teamtailor | Native RSS | None |
+| Workday | JSON POST | None |
+| RSS feeds | Standard RSS | None |
+
+## Support
+
+If job-radar helped you land a role, consider buying me a coffee:
+
+**Cash App:** `$vtchevalier`
+
+## License
+
+MIT — Victor T. Chevalier

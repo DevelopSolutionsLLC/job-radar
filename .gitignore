@@ -4,3 +4,11 @@ output/
 *.pdf
 .DS_Store
 CLAUDE.md
+
+# User-specific files (copy from *.example.* to set up)
+cv.md
+config/portals.yml
+config/profile.yml
+data/scan-history.tsv
+data/tracker.md
+data/pipeline.md

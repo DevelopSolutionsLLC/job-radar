@@ -116,11 +116,35 @@ for (const configPath of exampleConfigs) {
   }
 }
 
-// -- 3. REQUIRED MODE FILES ---------------------------------------------------
+// -- 3. PORTALS CONFIG VALIDATION --------------------------------------------
 
-console.log('\n3. Required mode files');
+console.log('\n3. Portals config validation');
 
-const requiredModes = ['evaluate.md', 'generate-cv.md', 'scan.md'];
+if (yaml) {
+  const portalsContent = readFileSync(join(ROOT, 'config/portals.example.yml'), 'utf-8');
+  const portals = yaml.load(portalsContent);
+
+  const requiredSections = ['greenhouse', 'ashby', 'lever', 'bamboohr', 'teamtailor', 'workday', 'rss'];
+  for (const section of requiredSections) {
+    if (section in portals) {
+      pass(`portals.example.yml has "${section}" section`);
+    } else {
+      fail(`portals.example.yml missing "${section}" section`);
+    }
+  }
+
+  if (portals.title_filter?.positive?.length > 0) {
+    pass('portals.example.yml has title_filter.positive');
+  } else {
+    fail('portals.example.yml missing title_filter.positive');
+  }
+}
+
+// -- 4. REQUIRED MODE FILES ---------------------------------------------------
+
+console.log('\n4. Required mode files');
+
+const requiredModes = ['evaluate.md', 'generate-cv.md', 'scan.md', 'job-radar.md'];
 
 for (const mode of requiredModes) {
   if (fileExists(`modes/${mode}`)) {
@@ -130,9 +154,9 @@ for (const mode of requiredModes) {
   }
 }
 
-// -- 4. SCANNER GRACEFUL HANDLING (missing portals.yml) -----------------------
+// -- 5. SCANNER GRACEFUL HANDLING (missing portals.yml) -----------------------
 
-console.log('\n4. Scanner handles missing portals.yml');
+console.log('\n5. Scanner handles missing portals.yml');
 
 // The scanner should exit with a non-zero code when portals.yml is missing,
 // rather than crashing with an unhandled exception. We run it from a temp cwd
@@ -158,9 +182,9 @@ if (portalsExists) {
   }
 }
 
-// -- 5. CV TEMPLATE -----------------------------------------------------------
+// -- 6. CV TEMPLATE -----------------------------------------------------------
 
-console.log('\n5. CV template');
+console.log('\n6. CV template');
 
 if (fileExists('templates/cv-template.html')) {
   const html = readFileSync(join(ROOT, 'templates/cv-template.html'), 'utf-8');

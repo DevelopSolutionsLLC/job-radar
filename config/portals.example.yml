@@ -1,37 +1,102 @@
+# What job titles are you looking for?
+# Tip: use /job-radar add role "Title" or /job-radar remove role "Title"
 title_filter:
   positive:
     - engineer
     - developer
     - software
+    - director
+    - manager
+    - architect
+    - lead
   negative:
     - intern
     - junior
     - contractor
+    - part-time
+    - temporary
+    - volunteer
+    - unpaid
+    - analyst
+    - recruiter
+    - sales
+    - marketing
+    - support
+    - customer success
 
-# API-based scanners (free, reliable, no auth)
+# Companies to scan
+# Tip: use /job-radar add company "Anthropic" or /job-radar discover
+
 greenhouse:
   - name: Anthropic
     board: anthropic
+  - name: Stability AI
+    board: stabilityai
   - name: Stripe
     board: stripe
   - name: Figma
     board: figma
+  - name: Airtable
+    board: airtable
+  - name: Contentful
+    board: contentful
+  - name: Hightouch
+    board: hightouch
+  - name: Temporal
+    board: temporal
+  - name: Intercom
+    board: intercom
+  - name: Celonis
+    board: celonis
+  - name: GitLab
+    board: gitlab
 
 ashby:
-  - name: Vercel
-    board: vercel
+  - name: Cohere
+    board: cohere
+  - name: ElevenLabs
+    board: elevenlabs
+  - name: Deepgram
+    board: deepgram
+  - name: Perplexity
+    board: perplexity
   - name: Linear
     board: linear
+  - name: LangChain
+    board: langchain
+  - name: Supabase
+    board: supabase
+  - name: n8n
+    board: n8n
+  - name: Vercel
+    board: vercel
 
 lever:
   - name: Netflix
     board: netflix
+  - name: Mistral AI
+    board: mistral
+  - name: Spotify
+    board: spotify
+  - name: Palantir
+    board: palantir
 
-# RSS feeds (LinkedIn job alerts, Indeed searches)
+bamboohr: []
+teamtailor: []
+workday: []
+
+# RSS feeds — discovery + aggregator scanning
 rss:
-  # Set up a LinkedIn job alert, copy the RSS feed URL
+  - name: WeWorkRemotely
+    url: https://weworkremotely.com/categories/remote-programming-jobs.rss
+  - name: HN Jobs
+    url: https://hnrss.org/jobs
+  # - name: RemoteOK
+  #   url: https://remoteok.com/remote-jobs.rss
+
+  # LinkedIn / Indeed via rss.app (paid service, creates RSS proxy):
+  # 1. Sign up at rss.app
+  # 2. Paste your LinkedIn job search or Indeed search URL
+  # 3. rss.app generates a standard RSS feed URL
   # - name: LinkedIn - Remote Engineer
-  #   url: https://www.linkedin.com/jobs/...rss
-  # Indeed RSS: https://www.indeed.com/rss?q=software+engineer&l=remote
-  # - name: Indeed - Software Engineer
-  #   url: https://www.indeed.com/rss?q=software+engineer&l=remote
+  #   url: https://rss.app/feeds/your-feed-id.xml

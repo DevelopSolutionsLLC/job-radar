@@ -2,20 +2,39 @@
 
 Scan configured portals for new job postings matching the user's target roles.
 
-## Sources (in order of reliability)
+## Quick start
 
-1. **API scanners** (Greenhouse, Ashby, Lever) — direct JSON APIs, no auth
-2. **RSS feeds** (LinkedIn alerts, Indeed) — user configures alert URLs
-3. **Manual paste** — user provides URL or JD text directly
+Use `/job-radar scan` or `/job-radar discover` — see `modes/job-radar.md` for all commands.
+
+## Sources (adapter registry)
+
+All ATS types are handled through a single adapter pattern in `scripts/scan.mjs`:
+
+1. **Greenhouse** — `boards-api.greenhouse.io` JSON API
+2. **Ashby** — `api.ashbyhq.com` REST API
+3. **Lever** — `api.lever.co` JSON API
+4. **BambooHR** — `{company}.bamboohr.com/careers/list`
+5. **Teamtailor** — native RSS at `{company}.teamtailor.com/jobs.rss`
+6. **Workday** — JSON POST to `myworkdayjobs.com` endpoint
+7. **RSS feeds** — WeWorkRemotely, HN Jobs, rss.app proxies
 
 ## Process
 
 1. Read `config/portals.yml` for configured sources
-2. Run `node scripts/scan.mjs` to fetch from API sources + RSS
-3. New matches go to `data/pipeline.md` as pending URLs
-4. Dedup against `data/scan-history.tsv`
+2. Run `node scripts/scan.mjs` to fetch all sources in parallel (10 concurrent)
+3. Filter by title (positive/negative keywords)
+4. Dedup by URL and company+role pair against `data/scan-history.tsv`
+5. New matches go to `data/pipeline.md`
 
-## After Scan
+## CLI flags
+
+```bash
+node scripts/scan.mjs                  # scan all sources
+node scripts/scan.mjs --dry-run        # preview without writing
+node scripts/scan.mjs --source lever   # scan only Lever boards
+```
+
+## After scan
 
 Show the user how many new postings were found, grouped by source.
-Ask if they want to evaluate any immediately.
+Ask if they want to evaluate any immediately or run discovery for new targets.
