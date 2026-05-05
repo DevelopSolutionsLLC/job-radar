@@ -18,26 +18,24 @@ const qr = [
   '▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀',
 ];
 
-const W = 41;
-const bar = '━'.repeat(W);
-const pad = (s) => '  ┃ ' + s + ' '.repeat(Math.max(0, W - 2 - s.length)) + ' ┃';
+const bar = '━'.repeat(36);
 
 console.log();
-console.log('  ┏' + bar + '┓');
-console.log(pad(''));
-console.log(pad('Thanks for using job-radar!'));
-console.log(pad(''));
+console.log(`  ${bar}`);
+console.log();
+console.log('  Thanks for using job-radar!');
+console.log();
 
 for (const line of qr) {
-  console.log(pad(line));
+  console.log(`  ${line}`);
 }
 
-console.log(pad(''));
-console.log(pad('Cash App: $vtchevalier'));
-console.log(pad('https://cash.app/$vtchevalier'));
-console.log(pad(''));
-console.log(pad('Built by Victor T. Chevalier'));
-console.log(pad('https://github.com/VTChevalier'));
-console.log(pad(''));
-console.log('  ┗' + bar + '┛');
+console.log();
+console.log('  Cash App: $vtchevalier');
+console.log('  https://cash.app/$vtchevalier');
+console.log();
+console.log('  Built by Victor T. Chevalier');
+console.log('  https://github.com/VTChevalier');
+console.log();
+console.log(`  ${bar}`);
 console.log();

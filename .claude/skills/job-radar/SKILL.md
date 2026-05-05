@@ -93,32 +93,32 @@ These commands modify `config/portals.yml` so the user never has to edit YAML di
 - `/job-radar donate` → Print the donate block below directly as text output (do NOT run it via Bash — tool output gets collapsed). Output this exactly:
 
 ```
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                                         ┃
-┃ Thanks for using job-radar!             ┃
-┃                                         ┃
-┃  ▄▄▄▄▄▄▄ ▄ ▄▄▄▄▄ ▄ ▄▄▄▄▄▄▄            ┃
-┃  █ ▄▄▄ █ ▀▀█ ▄▄█ ▀ █ ▄▄▄ █            ┃
-┃  █ ███ █ ▄▄█ ▀█▀▀▄ █ ███ █            ┃
-┃  █▄▄▄▄▄█ █ ▄ █▀█ ▄ █▄▄▄▄▄█            ┃
-┃  ▄▄▄  ▄▄ █▄█▄█  ▄ ▄▄▄▄  ▄▄            ┃
-┃  █ ▀ ██▄▀▄▀▀█▀▄▀██▄█▀ █▄▀█            ┃
-┃  ▄   ▄ ▄▀▄█  ▄  ▄ ▀▄▄ ▀  ▄            ┃
-┃  ▄█▄▀▄▄▄▄▄▄ ██ ▄█▀██▀ ▄▄▀█            ┃
-┃  ▄▄█▄▄ ▄▀  █ █ ▀▄▄████▀ ▄             ┃
-┃  ▄▄▄▄▄▄▄ ▀█ █▀█▄ █ ▄ █   █            ┃
-┃  █ ▄▄▄ █ ▀█▀▄▄  ██▄▄▄█  ▀             ┃
-┃  █ ███ █ ▄▀▄██▄  ▀█ ▄█▄▀█▄            ┃
-┃  █▄▄▄▄▄█ ████▀ ▀▄█▄█▀▀▄  ▄            ┃
-┃ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀           ┃
-┃                                         ┃
-┃ Cash App: $vtchevalier                  ┃
-┃ https://cash.app/$vtchevalier           ┃
-┃                                         ┃
-┃ Built by Victor T. Chevalier            ┃
-┃ https://github.com/VTChevalier          ┃
-┃                                         ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Thanks for using job-radar!
+
+ ▄▄▄▄▄▄▄ ▄ ▄▄▄▄▄ ▄ ▄▄▄▄▄▄▄
+ █ ▄▄▄ █ ▀▀█ ▄▄█ ▀ █ ▄▄▄ █
+ █ ███ █ ▄▄█ ▀█▀▀▄ █ ███ █
+ █▄▄▄▄▄█ █ ▄ █▀█ ▄ █▄▄▄▄▄█
+ ▄▄▄  ▄▄ █▄█▄█  ▄ ▄▄▄▄  ▄▄
+ █ ▀ ██▄▀▄▀▀█▀▄▀██▄█▀ █▄▀█
+ ▄   ▄ ▄▀▄█  ▄  ▄ ▀▄▄ ▀  ▄
+ ▄█▄▀▄▄▄▄▄▄ ██ ▄█▀██▀ ▄▄▀█
+ ▄▄█▄▄ ▄▀  █ █ ▀▄▄████▀ ▄
+ ▄▄▄▄▄▄▄ ▀█ █▀█▄ █ ▄ █   █
+ █ ▄▄▄ █ ▀█▀▄▄  ██▄▄▄█  ▀
+ █ ███ █ ▄▀▄██▄  ▀█ ▄█▄▀█▄
+ █▄▄▄▄▄█ ████▀ ▀▄█▄█▀▀▄  ▄
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+
+Cash App: $vtchevalier
+https://cash.app/$vtchevalier
+
+Built by Victor T. Chevalier
+https://github.com/VTChevalier
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
 ### Help
