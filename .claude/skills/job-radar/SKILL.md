@@ -1,6 +1,9 @@
 ---
 name: job-radar
 description: "Job search pipeline: scan, discover, import cv, evaluate, tailor, gaps, learn, add company/role, status, donate"
+user_invocable: true
+args: subcommand
+argument-hint: "[scan | discover | import cv | evaluate | tailor | gaps | learn | add company | add role | remove company | remove role | add feed | configure | status | check | donate | help]"
 ---
 
 # /job-radar — Job Search Pipeline
