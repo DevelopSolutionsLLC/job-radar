@@ -9,6 +9,7 @@ title_filter:
     - manager
     - architect
     - lead
+    - principal
   negative:
     - intern
     - junior
@@ -17,86 +18,104 @@ title_filter:
     - temporary
     - volunteer
     - unpaid
-    - analyst
     - recruiter
     - sales
     - marketing
-    - support
     - customer success
 
-# Companies to scan
-# Tip: use /job-radar add company "Anthropic" or /job-radar discover
+# Companies to scan — organized by sector
+# Tip: use /job-radar add company "Name" or /job-radar discover
 
 greenhouse:
+  # AI / ML
   - name: Anthropic
     board: anthropic
   - name: Stability AI
     board: stabilityai
+  - name: Databricks
+    board: databricks
+  # Big Tech
   - name: Stripe
     board: stripe
   - name: Figma
     board: figma
-  - name: Airtable
-    board: airtable
-  - name: Contentful
-    board: contentful
-  - name: Hightouch
-    board: hightouch
-  - name: Temporal
-    board: temporal
-  - name: Intercom
-    board: intercom
-  - name: Celonis
-    board: celonis
+  - name: Airbnb
+    board: airbnb
+  - name: Lyft
+    board: lyft
+  - name: Pinterest
+    board: pinterest
+  - name: Reddit
+    board: reddit
+  - name: LinkedIn
+    board: linkedin
+  # Security
+  - name: Datadog
+    board: datadog
+  - name: Elastic
+    board: elastic
+  - name: Cloudflare
+    board: cloudflare
+  - name: Zscaler
+    board: zscaler
+  # Cloud / SaaS
+  - name: Twilio
+    board: twilio
+  - name: MongoDB
+    board: mongodb
+  - name: Block
+    board: block
+  - name: Dropbox
+    board: dropbox
+  - name: Okta
+    board: okta
   - name: GitLab
     board: gitlab
+  # Gaming
+  - name: Riot Games
+    board: riotgames
+  - name: Epic Games
+    board: epicgames
+  - name: Bungie
+    board: bungie
 
 ashby:
   - name: Cohere
     board: cohere
-  - name: ElevenLabs
-    board: elevenlabs
-  - name: Deepgram
-    board: deepgram
   - name: Perplexity
     board: perplexity
+  - name: Wiz
+    board: wiz
+  - name: Snyk
+    board: snyk
+  - name: Vanta
+    board: vanta
+  - name: Notion
+    board: notion
+  - name: 1Password
+    board: 1password
   - name: Linear
     board: linear
-  - name: LangChain
-    board: langchain
-  - name: Supabase
-    board: supabase
-  - name: n8n
-    board: n8n
   - name: Vercel
     board: vercel
 
 lever:
   - name: Netflix
     board: netflix
-  - name: Mistral AI
-    board: mistral
   - name: Spotify
     board: spotify
   - name: Palantir
     board: palantir
+  - name: Atlassian
+    board: atlassian
 
 bamboohr: []
 teamtailor: []
 workday: []
 
-# RSS feeds — discovery + aggregator scanning
+# RSS feeds — catch companies not listed above
 rss:
   - name: WeWorkRemotely
     url: https://weworkremotely.com/categories/remote-programming-jobs.rss
   - name: HN Jobs
     url: https://hnrss.org/jobs
-  # - name: RemoteOK
-  #   url: https://remoteok.com/remote-jobs.rss
-
-  # LinkedIn / Indeed via rss.app (paid service, creates RSS proxy):
-  # 1. Sign up at rss.app
-  # 2. Paste your LinkedIn job search or Indeed search URL
-  # 3. rss.app generates a standard RSS feed URL
-  # - name: LinkedIn - Remote Engineer
-  #   url: https://rss.app/feeds/your-feed-id.xml
