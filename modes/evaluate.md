@@ -17,10 +17,17 @@ How many of the required skills does the user have?
 - 1: major gaps in core requirements
 
 ### C. Compensation (weight: 1.5x)
-Does the compensation meet the user's targets?
-- 5: at or above target range
-- 3: meets minimum, below target
-- 1: below minimum or undisclosed with red flags
+Read `compensation` from `config/profile.yml`: `min`, `target`, `target_max` (optional), `currency`.
+Score against the listed comp in the JD (base salary or total comp, whichever is stated):
+- 5: at or above `target` (or `target_max` if set — strong signal, may be leveled above you)
+- 4: between `target` and `target_max` — squarely in range
+- 3: at or above `min`, below `target` — acceptable but below goal
+- 2: comp undisclosed, no red flags — note the gap, score conservatively
+- 1: below `min`, or undisclosed with clear red flags (early-stage startup, no equity, etc.)
+
+If `compensation` is not set in profile.yml, skip numeric scoring and note: "No compensation target configured — score based on market rate signals only."
+
+Always state the listed comp range (or "not disclosed") in the report alongside the score.
 
 ### D. Company & Culture (weight: 1x)
 Company reputation, growth stage, engineering culture.

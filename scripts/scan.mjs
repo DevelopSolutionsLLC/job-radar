@@ -124,7 +124,58 @@ function loadTargetRoles() {
   } catch { return []; }
 }
 
-function scoreRelevance(title, resumeKeywords, targetRoles) {
+function loadWorkArrangement() {
+  if (!existsSync(PROFILE_PATH)) return null;
+  try {
+    const profile = yaml.load(readFileSync(PROFILE_PATH, 'utf-8'));
+    return profile?.work_arrangement || null;
+  } catch { return null; }
+}
+
+const US_PATTERNS = [
+  /\bunited states\b/i,
+  /\busa\b/i,
+  /\bu\.s\.(a\.)?\b/i,
+  /,\s*(AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY|DC)(\b|,|$)/,
+  /\b(alabama|alaska|arizona|arkansas|california|colorado|connecticut|delaware|florida|georgia|hawaii|idaho|illinois|indiana|iowa|kansas|kentucky|louisiana|maine|maryland|massachusetts|michigan|minnesota|mississippi|missouri|montana|nebraska|nevada|new hampshire|new jersey|new mexico|new york|north carolina|north dakota|ohio|oklahoma|oregon|pennsylvania|rhode island|south carolina|south dakota|tennessee|texas|utah|vermont|virginia|washington|west virginia|wisconsin|wyoming)\b/i,
+];
+
+function isUSLocation(location) {
+  return US_PATTERNS.some(p => p.test(location));
+}
+
+function isLocationCompatible(location, arrangement) {
+  if (!arrangement || !location) return true; // unknown location = give benefit of doubt
+  const isRemote = /\b(remote|anywhere|distributed|work from home|wfh)\b/i.test(location);
+  if (isRemote) return true; // remote is always compatible
+
+  // International location + not willing to relocate = hard filter
+  if (!arrangement.willing_to_relocate && !isUSLocation(location)) return false;
+
+  // Remote preference + non-remote location = hard filter
+  if (arrangement.preference === 'remote') return false;
+
+  return true; // hybrid/onsite/any with a US location — let it through
+}
+
+function scoreLocation(location, arrangement) {
+  if (!arrangement || !location) return 0;
+  const isRemote = /\b(remote|anywhere|distributed|work from home|wfh)\b/i.test(location);
+  const pref = arrangement.preference;
+
+  if (pref === 'remote') {
+    return isRemote ? 1 : 0; // incompatible non-remote already filtered; only bonus matters here
+  }
+  if (pref === 'hybrid') {
+    return isRemote ? 0.5 : 0; // slight bonus for remote when hybrid is fine with either
+  }
+  if (pref === 'onsite') {
+    return isRemote ? -0.5 : 0; // slight penalty for remote-only when you want in-person
+  }
+  return 0;
+}
+
+function scoreRelevance(title, location, resumeKeywords, targetRoles, workArrangement) {
   const lower = title.toLowerCase();
   let score = 0;
 
@@ -144,6 +195,8 @@ function scoreRelevance(title, resumeKeywords, targetRoles) {
   if (/\b(senior|staff|principal|lead)\b/i.test(title)) score += 0.5;
   if (/\b(manager|director|vp|head)\b/i.test(title)) score += 1;
 
+  score += scoreLocation(location, workArrangement);
+
   return Math.round(score * 10) / 10;
 }
 
@@ -156,6 +209,7 @@ const adapters = {
       title: j.title,
       url: j.absolute_url,
       company: e.name,
+      location: j.location?.name || null,
     })),
   },
 
@@ -165,6 +219,7 @@ const adapters = {
       title: j.title,
       url: `https://jobs.ashbyhq.com/${e.board}/${j.id}`,
       company: e.name,
+      location: j.location || j.locationName || null,
     })),
   },
 
@@ -174,6 +229,7 @@ const adapters = {
       title: j.text,
       url: j.hostedUrl,
       company: e.name,
+      location: j.categories?.location || j.workplaceType || null,
     })),
   },
 
@@ -183,6 +239,7 @@ const adapters = {
       title: j.jobOpeningName,
       url: j.jobOpeningShareUrl || `https://${e.slug}.bamboohr.com/careers/${j.id}/detail`,
       company: e.name,
+      location: j.location?.city ? `${j.location.city}, ${j.location.state || ''}`.trim().replace(/,$/, '') : null,
     })),
   },
 
@@ -300,6 +357,7 @@ if (!forceRefresh && !sourceFilter) {
 const { urls: seenUrls, roles: seenRoles } = loadDedup();
 const resumeKeywords = loadResumeKeywords();
 const targetRoles = loadTargetRoles();
+const workArrangement = loadWorkArrangement();
 const today = new Date().toISOString().slice(0, 10);
 
 // Ensure history file has header
@@ -364,8 +422,9 @@ for (const result of results) {
       appendFileSync(PIPELINE_PATH, `- [ ] [${job.company} — ${job.title}](${job.url})\n`);
     }
 
-    const relevance = scoreRelevance(job.title, resumeKeywords, targetRoles);
-    newPostings.push({ company: job.company, title: job.title, url: job.url, type: result.type, relevance });
+    const relevance = scoreRelevance(job.title, job.location, resumeKeywords, targetRoles, workArrangement);
+    const compatible = isLocationCompatible(job.location, workArrangement);
+    newPostings.push({ company: job.company, title: job.title, url: job.url, type: result.type, relevance, location: job.location || null, compatible });
     added++;
   }
 }
