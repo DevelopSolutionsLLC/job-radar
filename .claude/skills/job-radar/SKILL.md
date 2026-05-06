@@ -44,7 +44,19 @@ Before executing ANY subcommand, silently run `node scripts/setup.mjs` and check
 
 4. **If `resume.md` doesn't exist**, mention it naturally: "You don't have a resume imported yet. Want to do that first? Just run `/job-radar import resume`." Don't block — let the command proceed unless it specifically needs the resume (tailor, evaluate, gaps).
 
-Only show setup output if something actually needed to be installed. If everything was already ready, proceed silently to the command.
+5. **Profile completeness check** — After setup, read `config/profile.yml` and check for these required fields:
+   - `location` — must be set (not blank, not the example value "City, State/Country")
+   - `work_arrangement.preference` — must be one of: `remote`, `hybrid`, `onsite`, `any`
+   - `work_arrangement.max_commute_miles` — required only when preference is `hybrid` or `onsite`
+
+   **If any required field is missing AND the subcommand is `scan`, `discover`, or `configure`:**
+   Interrupt before running the command and say:
+   > "Before we scan, let me grab a couple of quick preferences — takes 30 seconds."
+   Then run the **Configure: Location & Work Arrangement** flow below, save the results, and proceed to the original command.
+
+   **For all other subcommands** (evaluate, tailor, status, etc.): proceed silently — don't block on missing config.
+
+Only show setup output if something actually needed to be installed or configured. If everything was already ready, proceed silently to the command.
 
 ## Command routing
 
@@ -111,29 +123,43 @@ After `scan` finishes (or returns cached results), do NOT just dump a summary an
 
 1. **Parse the scan output JSON** (last line of scan output) to get `new_postings` with titles, companies, URLs, and `relevance` scores. The scanner already scored each posting against the user's resume keywords and target roles. If using cached results, the same data is in `data/scan-cache.json`.
 
-2. **Sort all postings by relevance score** (highest first). The scanner scores by:
+2. **Filter out incompatible postings** before ranking. A posting is incompatible if `compatible: false` in the scan output. This covers:
+   - International locations when `willing_to_relocate: false`
+   - Non-remote locations when `work_arrangement.preference` is `remote`
+   - Postings with `compatible: true` or no `compatible` field (RSS feeds with unknown location) are kept.
+
+   Track the excluded count — you'll show it as a footnote.
+
+3. **Sort compatible postings by relevance score** (highest first). The scanner scores by:
    - Target role match from profile.yml (+3 exact, +2 partial, +1 keyword)
    - Resume skills keyword overlap (+0.5 per matching word)
    - Seniority signals (+1 for manager/director, +0.5 for senior/staff/principal)
+   - Location bonus: +1 for confirmed remote (when preference=remote), +0.5 for remote (when preference=hybrid)
 
-3. **Present the top 15 as a numbered list**, mixing named companies AND RSS-discovered companies together, ranked purely by relevance:
+4. **Present the top 15 compatible postings as a numbered list**, mixing named companies AND RSS-discovered companies together, ranked purely by relevance. Include location when available — it lets the user filter at a glance without opening the posting:
 
    ```
    Best matches from this scan (ranked by resume fit):
 
-    1. Anthropic — Manager of Applied AI Architecture       (relevance: 5.5)
-    2. Intercom — Senior Security Engineering Manager        (relevance: 4.5)
-    3. Vanta — Staff Security Engineer                       (relevance: 4.0) ← discovered via RSS
-    4. Stripe — Engineering Manager, Operator Tooling        (relevance: 3.5)
-    5. Contentful — Manager, Security Engineering            (relevance: 3.5)
+    1. Anthropic — Manager of Applied AI Architecture       (relevance: 5.5) · Remote
+    2. Intercom — Senior Security Engineering Manager        (relevance: 4.5) · Remote
+    3. Vanta — Staff Security Engineer                       (relevance: 4.0) · Remote  ← discovered via RSS
+    4. Stripe — Engineering Manager, Operator Tooling        (relevance: 3.5) · Remote
+    5. Contentful — Manager, Security Engineering            (relevance: 3.5) · Remote
     ...
 
    Pick a number to evaluate, or multiple (e.g., "1, 3, 5").
    Type "all top" to evaluate the top 5.
    Type "skip" to finish.
+
+   14 postings excluded (location incompatible with your work arrangement).
    ```
 
-4. **If the scan found companies worth adding** (3+ matching roles, not in portals.yml), the JSON output includes a `suggest_add` array. Present these to the user:
+   Format the location as a short label after a `·` separator. If location is null or unknown, omit the separator entirely. Normalize common variants: "Remote, USA" → "Remote", "Remote - Texas" → "Remote (TX)", "New York, New York" → "New York, NY".
+
+   Always show the excluded count as the last line so the user knows postings were filtered, not missing.
+
+5. **If the scan found companies worth adding** (3+ matching roles, not in portals.yml), the JSON output includes a `suggest_add` array. Present these to the user:
 
    ```
    Companies worth adding to your scan list:
@@ -145,9 +171,9 @@ After `scan` finishes (or returns cached results), do NOT just dump a summary an
 
    When the user says yes, run `node scripts/resolve-ats.mjs "<name>"` to detect the ATS and add to portals.yml — same as `/job-radar add company`.
 
-5. **When the user picks a number**, look up the URL from the postings array and run the evaluate flow automatically — no URL copy-pasting needed.
-6. **After each evaluation**, offer: evaluate another, tailor a resume for one they liked, or stop.
-7. **If the user says "all top"**, evaluate the top 5 sequentially, showing a brief score summary after each.
+6. **When the user picks a number**, look up the URL from the postings array and run the evaluate flow automatically — no URL copy-pasting needed.
+7. **After each evaluation**, offer: evaluate another, tailor a resume for one they liked, or stop.
+8. **If the user says "all top"**, evaluate the top 5 sequentially, showing a brief score summary after each.
 
 This turns scan from a data dump into an interactive session where the user goes from "scan" to "evaluate" to "tailor" without ever touching a URL. Companies from RSS feeds sit alongside named companies — the best matches float to the top regardless of source.
 
@@ -165,7 +191,177 @@ These commands modify `config/portals.yml` so the user never has to edit YAML di
 - `/job-radar add company "<name>"` → Run `node scripts/resolve-ats.mjs "<name>"`, parse the JSON output, and add the company to the correct section in portals.yml. Confirm what was added.
 - `/job-radar remove company "<name>"` → Remove from portals.yml. Confirm removal.
 - `/job-radar add feed <url>` → Add RSS feed URL to the `rss:` section of portals.yml.
-- `/job-radar configure` → Interactive setup: walk through target roles, location preferences, companies to track. Read and update portals.yml and config/profile.yml.
+- `/job-radar configure` → Run the **Configure Wizard** below. Covers location, work arrangement, target roles, score threshold, and deal-breakers. Reads and writes `config/profile.yml`.
+
+### Configure Wizard
+
+Run this wizard when the user explicitly calls `/job-radar configure`, or when the profile completeness check (step 5 of "Before anything") detects missing required fields before `scan` or `discover`.
+
+Read `config/profile.yml` first (or `config/profile.example.yml` if profile.yml doesn't exist yet) so you can show current values as defaults.
+
+If `resume.md` exists, extract the user's location from it to pre-fill the location question.
+
+Walk through each question in order. Show the current value (if set) so the user can press Enter to keep it. Save after the final question.
+
+---
+
+**Q1 — Location**
+
+> "Where are you located? (city, state or country)
+> Current: {current value or "not set"}"
+
+Accept free-form text. Store as `location` in profile.yml. Examples: "Austin, TX", "London, UK", "Remote".
+
+---
+
+**Q2 — Work arrangement**
+
+> "What's your work arrangement preference?
+>   1. Remote only
+>   2. Hybrid (some days in office)
+>   3. Onsite only
+>   4. Any / no preference
+> Current: {current value or "not set"}"
+
+Map answer to profile.yml values:
+- 1 → `remote`
+- 2 → `hybrid`
+- 3 → `onsite`
+- 4 → `any`
+
+Store as `work_arrangement.preference`.
+
+---
+
+**Q3 — Max commute distance** *(only ask if Q2 answer was hybrid or onsite)*
+
+> "What's the farthest you'd commute one-way (in miles)?
+> Current: {current value or 30}"
+
+Accept a number. Default to 30 if blank. Store as `work_arrangement.max_commute_miles`.
+
+Skip this question entirely if preference is `remote` or `any`.
+
+---
+
+**Q4 — Relocation**
+
+> "Are you willing to relocate for the right role? (yes/no)
+> Current: {current value or "no"}"
+
+If yes:
+
+> "Which cities would you consider? (comma-separated, e.g., Austin TX, New York NY)
+> Current: {current value or "none"}"
+
+Store as `work_arrangement.willing_to_relocate` (true/false) and `work_arrangement.relocation_cities` (list).
+
+---
+
+**Q5 — Target roles**
+
+> "What job titles are you targeting? (comma-separated, or press Enter to keep current)
+> Current: {comma-joined list}"
+
+Show current list. Accept additions or a full replacement. Store as `targets.roles` list.
+
+---
+
+**Q6 — Minimum score**
+
+> "What's the minimum evaluation score to consider applying? (1.0–5.0)
+> Current: {current value or 3.5}"
+
+Accept a float. Default 3.5. Store as `targets.min_score`.
+
+---
+
+**Q7 — Deal-breakers**
+
+> "Any absolute deal-breakers? (comma-separated, or press Enter to keep current)
+> Current: {comma-joined list or "none"}
+> Examples: no equity, defense contractor, on-site only"
+
+Store as `preferences.deal_breakers` list.
+
+---
+
+**Q8 — Compensation**
+
+> "What's your compensation range?
+>   Minimum (won't apply below this): {current min or "not set"}
+>   Target (what you're aiming for):  {current target or "not set"}
+>   Currency: {current currency or "USD"}
+>
+> Enter as: min / target   (e.g., 150000 / 200000)
+> Press Enter to skip."
+
+Accept input in any of these forms:
+- Single target: `150000 / 200000` → min=150000, target=200000
+- Target range: `150000 / 200000 - 225000` → min=150000, target=200000, target_max=225000
+- Shorthand: `150k / 200k-225k` → same as above
+- With currency: `150000 / 200000 GBP` → currency=GBP
+
+Normalize shorthand: `150k` → `150000`, `1.5M` → `1500000`. Currency defaults to USD.
+
+When the user gives a range for target (e.g., "245000–285000"), store the low end as `target` and the high end as `target_max`.
+
+Store as:
+```yaml
+compensation:
+  currency: USD
+  min: 225000
+  target: 245000
+  target_max: 285000  # omit if user gave a single target number
+```
+
+If skipped, leave the `compensation` block out of profile.yml — don't write empty values. The evaluate step will still score compensation if the JD lists a range; it just won't penalize for being below a threshold.
+
+---
+
+**Q9 — Company size**
+
+> "What company size do you prefer?
+>   1. Startup (< 200 people)
+>   2. Mid-size (200–2,000 people)
+>   3. Enterprise (2,000+ people)
+>   4. Any / no preference
+> Current: {current value or "any"}"
+
+Map to profile.yml values:
+- 1 → `startup`
+- 2 → `mid`
+- 3 → `enterprise`
+- 4 → `any`
+
+Store as `preferences.company_size`.
+
+---
+
+**After all questions — save and confirm**
+
+1. Write all collected values to `config/profile.yml`, preserving any fields that weren't touched.
+2. Show a summary:
+
+   ```
+   Profile saved to config/profile.yml:
+
+     Location:        Austin, TX
+     Work preference: remote
+     Willing to relocate: no
+
+     Target roles:    Senior Manager, Director of Engineering, Staff Engineer
+     Min score:       3.5
+     Deal-breakers:   no equity
+
+     Compensation:    $150,000 min / $200,000 target (USD)
+     Company size:    any
+   ```
+
+   Omit the Compensation line if the user skipped Q8.
+
+3. If this wizard was triggered automatically (by the completeness check before scan/discover), say: "All set — starting the scan now." and proceed to the original command.
+4. If the user ran `/job-radar configure` directly, say: "Done! Run `/job-radar scan` whenever you're ready."
 
 ### Pipeline
 
@@ -424,9 +620,49 @@ Read the Skills section from `resume-bullets.md`. Reorder skill categories to fr
    - Which bullet categories were chosen per role
    - Which skills were front-loaded
    - What new bullets were added to the bank (if any)
-4. Ask if they want to generate a PDF: `node scripts/generate-pdf.mjs`
 
-### Step 7 — Update keyword tracker
+### Step 7 — Generate cover letter
+
+Always generate a cover letter alongside the tailored resume — it is not optional.
+
+1. Write `output/cover-letter-{company-slug}-{date}.md` — 4-5 paragraphs, max 1 page:
+   - **Para 1:** The direct hook — what you've been doing that maps to this specific role. Name your most relevant work concretely.
+   - **Para 2:** PM/IC/SA credentials — evidence you can do the job's core function at the required level.
+   - **Para 3:** Name any real gaps directly and honestly. "The domain is new. The problem is not." Don't hide gaps — acknowledge them and show your transfer path.
+   - **Para 4:** Why this company specifically. What they're doing that matters and why you want to build it.
+   - **Para 5 (optional):** Invitation to discuss — short, warm close.
+   - Sign with: name, email, phone.
+   - Date: today's date.
+   - Recipient: "{Company} Recruiting Team / Re: {Role Title}"
+
+2. **Rule:** Never pad. Cut anything that doesn't add signal. The reader has 30 seconds.
+
+### Step 8 — Generate HTML and PDF (automatic, always)
+
+PDF generation is not optional — run it automatically for every tailor command.
+
+1. Convert the resume markdown to HTML at `output/resume-tailored-{company-slug}-{date}.html`:
+   - Use `@page { size: letter; margin: 0.6in 0.7in; }`
+   - Font: 'Helvetica Neue', Arial, sans-serif at 10.5pt, line-height 1.4
+   - CSS classes: `.entry`, `.entry-header` (flex, space-between), `.title` (bold), `.company` (italic), `.date` (9pt, #666)
+   - `h2`: 11pt, uppercase, letter-spacing 1px, border-bottom 1.5px solid #333
+   - `ul`: margin 4px 0, padding-left 18px; `li`: margin-bottom 2px
+   - Escape `&` as `&amp;` in HTML
+
+2. Convert the cover letter markdown to HTML at `output/cover-letter-{company-slug}-{date}.html`:
+   - Use `@page { size: letter; margin: 1in; }`
+   - Font: 'Helvetica Neue', Arial, sans-serif at 11pt, line-height 1.5
+   - Sections: `.header` (name 14pt bold, contact 10pt #555), `.date`, `.recipient`, `.body p` (margin 0 0 12px, text-align justify), `.closing`
+
+3. Run PDF generation for both files:
+   ```
+   node scripts/generate-pdf.mjs output/resume-tailored-{company-slug}-{date}.html output/resume-tailored-{company-slug}-{date}.pdf
+   node scripts/generate-pdf.mjs output/cover-letter-{company-slug}-{date}.html output/cover-letter-{company-slug}-{date}.pdf
+   ```
+
+4. Confirm the 4 output files created (2 HTML + 2 PDF) and offer to open them.
+
+### Step 9 — Update keyword tracker
 
 Append the JD's keywords to the **Keyword Frequency Tracker** table in `resume-bullets.md`. Increment count if the keyword already exists, add a new row if not. Update the "Last Seen" date.
 

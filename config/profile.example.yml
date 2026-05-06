@@ -1,6 +1,6 @@
 name: Your Name
 email: you@example.com
-location: City, Country
+location: City, State/Country     # where you live — used for commute scoring
 timezone: America/New_York
 
 targets:
@@ -11,16 +11,25 @@ targets:
     - Director of Engineering
   min_score: 3.5  # don't apply below this
 
+work_arrangement:
+  preference: remote              # remote | hybrid | onsite | any
+  max_commute_miles: 30           # one-way max; only used when preference is hybrid or onsite
+  willing_to_relocate: false      # true | false
+  relocation_cities: []           # e.g., ["Austin, TX", "New York, NY"] — only if willing_to_relocate: true
+
 preferences:
-  remote: preferred  # required | preferred | open | no
-  company_size: any  # startup | mid | enterprise | any
-  deal_breakers: []  # e.g., ["on-site only", "no equity", "defense contractor"]
+  company_size: any               # startup | mid | enterprise | any
+  deal_breakers: []               # e.g., ["no equity", "defense contractor"]
 
 resume:
-  max_pages: 2            # hard limit for tailored resumes
-  no_cross_references: true  # never mention one employer's work in another's bullets
+  max_pages: 2                    # hard limit for tailored resumes
+  no_cross_references: true       # never mention one employer's work in another's bullets
+
+cover_letter:
+  max_pages: 1                    # hard limit for tailored cover letters
 
 compensation:
   currency: USD
-  min: 150000
-  target: 200000
+  min: 150000       # won't apply below this
+  target: 200000    # bottom of your target range
+  target_max: 225000  # top of your target range (optional)
