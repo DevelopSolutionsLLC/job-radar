@@ -43,7 +43,9 @@ function loadDedup() {
       if (line.startsWith('url\t')) continue;
       const cols = line.split('\t');
       urls.add(cols[0]);
-      if (cols.length >= 4) roles.add(`${cols[1]}||${cols[2]}`.toLowerCase());
+      if (cols.length >= 5 && cols[3] && cols[4]) {
+        roles.add(`${cols[4]}||${cols[3]}`.toLowerCase());
+      }
     }
   }
 

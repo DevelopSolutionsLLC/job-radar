@@ -9,9 +9,10 @@
  *   node scripts/test-all.mjs
  */
 
-import { execFileSync } from 'child_process';
-import { readFileSync, existsSync, readdirSync } from 'fs';
+import { execFileSync, spawn } from 'child_process';
+import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'fs';
 import { join, dirname } from 'path';
+import { tmpdir } from 'os';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -52,6 +53,41 @@ function runScript(filePath, args = []) {
   } catch (e) {
     return { exitCode: e.status ?? 1, stderr: e.stderr || '' };
   }
+}
+
+function runScriptAsync(filePath, args = [], opts = {}) {
+  return new Promise((resolve) => {
+    const child = spawn('node', [filePath, ...args], {
+      cwd: opts.cwd || ROOT,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    let stdout = '';
+    let stderr = '';
+    const timer = setTimeout(() => {
+      child.kill('SIGTERM');
+      resolve({ exitCode: 124, stdout, stderr: `${stderr}\nTimed out` });
+    }, opts.timeout || 15000);
+
+    child.stdout.on('data', chunk => { stdout += chunk.toString(); });
+    child.stderr.on('data', chunk => { stderr += chunk.toString(); });
+    child.on('close', code => {
+      clearTimeout(timer);
+      resolve({ exitCode: code ?? 1, stdout, stderr });
+    });
+  });
+}
+
+function parseLastJson(stdout) {
+  const lines = stdout.trim().split('\n').filter(Boolean);
+  for (let i = lines.length - 1; i >= 0; i--) {
+    try {
+      return JSON.parse(lines[i]);
+    } catch {
+      // Keep looking for the scanner's final machine-readable line.
+    }
+  }
+  return null;
 }
 
 console.log('\n🧪 job-radar test suite\n');
@@ -195,6 +231,56 @@ if (fileExists('templates/resume-template.html')) {
   }
 } else {
   fail('templates/resume-template.html missing');
+}
+
+// -- 7. SCAN HISTORY DEDUP ----------------------------------------------------
+
+console.log('\n7. Scan history dedup');
+
+const fixtureDir = mkdtempSync(join(tmpdir(), 'job-radar-scan-test-'));
+const rssXml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <item>
+      <title>Platform Engineer</title>
+      <link>http://example.test/jobs/new-platform-engineer</link>
+    </item>
+  </channel>
+</rss>`;
+const rssDataUrl = `data:application/rss+xml,${encodeURIComponent(rssXml)}`;
+
+try {
+  mkdirSync(join(fixtureDir, 'config'), { recursive: true });
+  mkdirSync(join(fixtureDir, 'data'), { recursive: true });
+  writeFileSync(join(fixtureDir, 'config/portals.yml'), `title_filter:
+  positive:
+    - engineer
+  negative: []
+rss:
+  - name: ExampleCo
+    url: "${rssDataUrl}"
+`);
+  writeFileSync(
+    join(fixtureDir, 'data/scan-history.tsv'),
+    'url\tfirst_seen\tsource\ttitle\tcompany\tstatus\n'
+    + 'http://example.test/jobs/old-platform-engineer\t2026-05-01\trss\tPlatform Engineer\tExampleCo\tadded\n'
+  );
+
+  const result = await runScriptAsync(join(SCRIPTS_DIR, 'scan.mjs'), ['--source', 'rss'], {
+    cwd: fixtureDir,
+    timeout: 15000,
+  });
+  const scanJson = parseLastJson(result.stdout);
+
+  if (result.exitCode === 0 && scanJson?.new_count === 0 && scanJson?.duplicates === 1) {
+    pass('scan.mjs dedups existing company+role pairs when URLs differ');
+  } else {
+    fail(`scan.mjs company+role dedup regression failed (exit ${result.exitCode}, stdout: ${result.stdout.trim()}, stderr: ${result.stderr.trim()})`);
+  }
+} catch (e) {
+  fail(`scan.mjs company+role dedup regression errored: ${e.message}`);
+} finally {
+  rmSync(fixtureDir, { recursive: true, force: true });
 }
 
 // -- SUMMARY ------------------------------------------------------------------
