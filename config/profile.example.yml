@@ -1,3 +1,7 @@
+# job-radar configuration
+# This is the ONE file you need to edit. Run `/job-radar configure` to set it up interactively.
+# portals.yml (which companies to scan) is managed via `/job-radar add company` — you rarely need to edit it directly.
+
 name: Your Name
 email: you@example.com
 location: City, State/Country     # where you live — used for commute scoring
@@ -33,3 +37,13 @@ compensation:
   min: 150000       # won't apply below this
   target: 200000    # bottom of your target range
   target_max: 225000  # top of your target range (optional)
+
+resume_builder:
+  role_type: manager        # manager | ic | director | hybrid
+                            # manager  → lead bullets with team/org impact: headcount, budget, cross-functional ownership
+                            # ic       → lead bullets with technical achievements: systems built, architecture, scale
+                            # director → lead bullets with business/program impact: strategy, P&L, stakeholder influence
+                            # hybrid   → balance delivery ownership with hands-on technical depth
+  seniority: senior         # junior | mid | senior | principal | executive
+  industries:               # industries to emphasize in bullets and cover letters
+    - software engineering

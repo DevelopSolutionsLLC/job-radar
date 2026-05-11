@@ -4,26 +4,24 @@ description: "Job search pipeline: scan, discover, import resume, evaluate, tail
 user_invocable: true
 args: subcommand
 argument-hint: |
-  scan              Scan portals (cached 24h, pick from results)
-  scan --force      Force fresh scan, bypass cache
-  scan --dry-run    Preview without writing
-  discover          Find hiring companies from RSS feeds
-  discover --fresh  Sort by newest postings
-  import resume     Import your resume (paste, PDF, file, LinkedIn)
-  evaluate          Score a posting (pick from list, URL, or company name)
-  tailor            Build a tailored resume (pick from list, URL, or company name)
-  gaps              Show keyword frequency + skill gaps
-  learn             Skills to study, ranked by market demand
-  add company       Auto-detect ATS + add to scan list
-  add role          Add to desired roles
-  remove company    Remove from scan list
-  remove role       Add to excluded roles
-  add feed          Add an RSS feed
-  configure         Interactive setup wizard
-  status            Pipeline summary
-  check <url>       Verify a posting is still live
-  donate            Support the project
-  help              Show all commands
+  scan                  Scan portals (cached 24h, pick from results)
+  scan --force          Force fresh scan, bypass cache
+  scan --dry-run        Preview without writing
+  discover              Find hiring companies from RSS feeds
+  discover --fresh      Sort by newest postings
+  resume import         Import your resume (paste, PDF, file, LinkedIn)
+  resume tailor         Build a tailored resume (pick from list, URL, or name)
+  resume audit          Check resume freshness + keyword gaps
+  evaluate              Score a posting (pick from list, URL, or company name)
+  status                Pipeline summary
+  add "name or title"   Add a company, role title, or RSS feed URL
+  remove "name"         Remove a company or exclude a role title
+  config                Full setup wizard (location, targets, preferences)
+  check <url>           Verify a posting is still live
+  gaps                  Keyword frequency + skill gaps
+  learn                 Skills to study, ranked by demand
+  donate                Support the project
+  help                  Show all commands
 ---
 
 # /job-radar — Job Search Pipeline
@@ -56,6 +54,10 @@ Before executing ANY subcommand, silently run `node scripts/setup.mjs` and check
 
    **For all other subcommands** (evaluate, tailor, status, etc.): proceed silently — don't block on missing config.
 
+6. **Resume audit reminder** — After the profile check, silently read `data/last-audit.txt`. If it's missing or older than 7 days, set a flag to append a one-line reminder after the current command completes:
+   > "Your resume hasn't been audited in {N} days — run `resume audit` when you have a moment."
+   Don't block. Don't show it more than once per session.
+
 Only show setup output if something actually needed to be installed or configured. If everything was already ready, proceed silently to the command.
 
 ## Command routing
@@ -67,37 +69,32 @@ If no subcommand is given (user just types `/job-radar` or `/job-radar help`), p
 ```
 /job-radar — Job Search Pipeline
 
-  Scanning & Discovery
-    scan                       Scan portals → pick best matches → evaluate
-    scan --force               Force fresh scan, bypass 24h cache
-    scan --dry-run             Preview without writing
-    scan --source <type>       Scan one ATS type only
+  Scan & Discover
+    scan                       Scan portals → pick matches → evaluate
+    scan --force               Force fresh scan
+    scan --dry-run             Preview only
     discover                   Find hiring companies from RSS feeds
-    discover --fresh           Sort by newest postings
-    discover --urgent          Sort by longest-open roles
-    discover --add tier1       Auto-add top-tier companies
+    discover --fresh           Newest postings first
+    discover --urgent          Longest-open roles first
 
-  Resume & Tailoring
-    import resume              Import resume (paste, PDF, file, LinkedIn)
-    import resume <path>       Import from a specific file
-    tailor                     Build a tailored resume (pick from list or give URL)
-    gaps                       Show keyword frequency + skill gaps
-    learn                      Skills to study, ranked by market demand
+  Resume
+    resume import              Import resume (paste, PDF, file, LinkedIn)
+    resume tailor              Build a tailored resume
+    resume audit               Check resume freshness + keyword gaps
 
-  Configuration
-    add company "<name>"       Auto-detect ATS + add to scan list
-    remove company "<name>"    Remove from scan list
-    add role "<title>"         Add to desired roles
-    remove role "<title>"      Add to excluded roles
-    add feed <url>             Add an RSS feed
-    configure                  Interactive setup wizard
+  Evaluate & Apply
+    evaluate                   Score a posting (pick from list, URL, or name)
+    status                     Pipeline summary
 
-  Pipeline
-    evaluate                   Score a posting (pick from list or give URL)
-    status                     Pipeline summary (pending/applied/etc.)
+  Configure
+    add "name or title"        Add a company, role title, or RSS feed URL
+    remove "name or title"     Remove a company or exclude a role title
+    config                     Full setup wizard (location, targets, preferences)
     check <url>                Verify a posting is still live
 
   Other
+    gaps                       Keyword frequency + skill gaps
+    learn                      Skills to study, ranked by demand
     donate                     Support the project
     help                       Show this list
 ```
@@ -177,21 +174,36 @@ After `scan` finishes (or returns cached results), do NOT just dump a summary an
 
 This turns scan from a data dump into an interactive session where the user goes from "scan" to "evaluate" to "tailor" without ever touching a URL. Companies from RSS feeds sit alongside named companies — the best matches float to the top regardless of source.
 
-### Onboarding
+### Resume hub
 
-- `/job-radar import resume` → Import the user's resume into `resume.md`. See **Import Resume** implementation below.
-- `/job-radar import resume <path>` → Import from a specific file (PDF, DOCX, TXT, HTML, MD).
+All resume-related commands route through `resume`:
+
+- `/job-radar resume import` (or `/job-radar import resume`) → Import the user's resume into `resume.md`. See **Import Resume** implementation below.
+- `/job-radar resume import <path>` (or `/job-radar import resume <path>`) → Import from a specific file (PDF, DOCX, TXT, HTML, MD).
+- `/job-radar resume tailor` (or `/job-radar tailor`) → Tailor a resume for a specific role. See **Tailor Resume** implementation below.
+- `/job-radar resume audit` → Run the **Resume Audit** flow. See implementation below.
 
 ### Configuration
 
 These commands modify `config/portals.yml` so the user never has to edit YAML directly.
 
-- `/job-radar add role "<title>"` → Add to `title_filter.positive` in portals.yml.
-- `/job-radar remove role "<title>"` → Add to `title_filter.negative` in portals.yml.
-- `/job-radar add company "<name>"` → Run `node scripts/resolve-ats.mjs "<name>"`, parse the JSON output, and add the company to the correct section in portals.yml. Confirm what was added.
-- `/job-radar remove company "<name>"` → Remove from portals.yml. Confirm removal.
-- `/job-radar add feed <url>` → Add RSS feed URL to the `rss:` section of portals.yml.
-- `/job-radar configure` → Run the **Configure Wizard** below. Covers location, work arrangement, target roles, score threshold, and deal-breakers. Reads and writes `config/profile.yml`.
+**Smart `add` and `remove`** — detect context automatically from the argument:
+
+- `/job-radar add <value>` → Detect what to add:
+  - If `<value>` looks like a URL (starts with `http`) → add as an RSS feed to portals.yml
+  - If `<value>` contains a role keyword (`Engineer`, `Manager`, `Director`, `Lead`, `Staff`, `Principal`, `Architect`, `Developer`, `Analyst`, `Designer`, `Scientist`, `Specialist`) → add as a role to `title_filter.positive`
+  - Otherwise → treat as a company name, run `node scripts/resolve-ats.mjs "<value>"` and add to portals.yml
+- `/job-radar add company "<name>"` → Explicit company (bypass detection)
+- `/job-radar add role "<title>"` → Explicit role (bypass detection)
+- `/job-radar add feed <url>` → Explicit feed (bypass detection)
+
+- `/job-radar remove <value>` → Detect what to remove:
+  - If `<value>` contains a role keyword (same list as above) → add to `title_filter.negative`
+  - Otherwise → treat as a company name, remove from portals.yml
+- `/job-radar remove company "<name>"` → Explicit company removal
+- `/job-radar remove role "<title>"` → Explicit role exclusion
+
+- `/job-radar configure` or `/job-radar config` → Run the **Configure Wizard** below. Covers location, work arrangement, target roles, score threshold, deal-breakers, and resume builder settings. Reads and writes `config/profile.yml`.
 
 ### Configure Wizard
 
@@ -338,6 +350,25 @@ Store as `preferences.company_size`.
 
 ---
 
+**Q10 — Resume builder role type**
+
+> "What type of roles are you targeting?
+>   1. Engineering Manager / Team Lead
+>   2. Individual Contributor (IC) / Staff / Principal
+>   3. Director / VP / Executive
+>   4. Hybrid (IC at manager level — player/coach)
+> Current: {current value or "not set"}"
+
+Map to `resume_builder.role_type`:
+- 1 → `manager`
+- 2 → `ic`
+- 3 → `director`
+- 4 → `hybrid`
+
+Store as `resume_builder.role_type`. This shapes how resume bullets are framed during tailoring — manager leads with team/org impact, ic leads with technical achievement, director leads with business/program impact, hybrid balances both.
+
+---
+
 **After all questions — save and confirm**
 
 1. Write all collected values to `config/profile.yml`, preserving any fields that weren't touched.
@@ -356,9 +387,10 @@ Store as `preferences.company_size`.
 
      Compensation:    $150,000 min / $200,000 target (USD)
      Company size:    any
+     Role type:       manager
    ```
 
-   Omit the Compensation line if the user skipped Q8.
+   Omit the Compensation line if the user skipped Q8. Omit Role type if the user skipped Q10.
 
 3. If this wizard was triggered automatically (by the completeness check before scan/discover), say: "All set — starting the scan now." and proceed to the original command.
 4. If the user ran `/job-radar configure` directly, say: "Done! Run `/job-radar scan` whenever you're ready."
@@ -371,9 +403,10 @@ Store as `preferences.company_size`.
 - `/job-radar status` → Show pipeline summary from data/tracker.md and data/pipeline.md: counts of pending, evaluated, applied, interviewed, offered, rejected.
 - `/job-radar check <url>` → Run `node scripts/check-liveness.mjs <url>` to verify a posting is still live.
 
-### Tailoring
+### Resume hub routing
 
-- `/job-radar tailor <url or number>` → If the user provides a number (from the post-scan list) or a company name, look up the URL from `data/pipeline.md`. If they provide a URL, use it directly. Then read the JD, match against `resume-bullets.md`, assemble a tailored resume. See **Tailor Resume** implementation below.
+- `/job-radar resume tailor <url or number>` (or `/job-radar tailor`) → If the user provides a number (from the post-scan list) or a company name, look up the URL from `data/pipeline.md`. If they provide a URL, use it directly. Then read the JD, match against `resume-bullets.md`, assemble a tailored resume. See **Tailor Resume** implementation below.
+- `/job-radar resume audit` → See **Resume Audit** implementation below.
 
 ### Support
 
@@ -532,6 +565,11 @@ When the user runs `/job-radar tailor <url>`, auto-assemble a targeted resume fr
 - **No cross-company references.** Each company's bullets stand alone. Never mention work at another company within a bullet (e.g., don't reference "AT&T's ASPR" in a Stratascale bullet). If a skill spans employers, describe it in the context of the company where the bullet lives.
 - **Summaries are the exception** — they can reference career span and multiple employers.
 - **Never fabricate** experience, skills, or metrics.
+- **Never change locations.** Copy all location fields — the header location and every per-role location — exactly as they appear in `resume.md`. Do not substitute "Remote", "Remote (TX)", or any inferred variant. The user's actual city/state text is the correct value, always.
+
+### Step 0 — Read role-type framing
+
+Before anything else, read `config/profile.yml resume_builder.role_type`. This controls how bullets are framed throughout the resume. Apply the framing rules defined in `modes/generate-resume.md` — the role type shapes which accomplishments lead each bullet, not which bullets are included. Default to `hybrid` if not set.
 
 ### Step 1 — Fetch and analyze the JD
 
@@ -604,8 +642,11 @@ If the user's experience from Step 2 changes the framing (e.g., they revealed st
 For each position in `resume-bullets.md`:
 1. Read the `<!-- tags: ... -->` comments on each bullet section
 2. Score each section by how many JD keywords match its tags (including any new bullets from Step 2)
-3. Pick the 4-6 highest-scoring bullets per position
+3. Pick bullets per position: **4 for the current role, 3 for all prior roles** — never exceed these limits
 4. Lead with the strongest keyword match, end with broadest signal
+5. **Blend when it makes the resume stronger:** If two bullets from the same role address the same skill gap or prove a stronger combined point together, merge them into one tight bullet rather than listing them separately. One well-constructed blended bullet is better than two thin ones. Never blend just to hit the count — blend only when the result is genuinely stronger.
+
+**Before including any bullet, apply the Writing Standards from CLAUDE.md.** Rewrite weak bullets on the fly — fix passive voice, remove "responsible for", add numbers if missing from the resume context, eliminate AI-sounding flourishes (echo structures, rhetorical contrasts, self-congratulatory editorializing). The output must read like a FAANG-tier resume writer produced it for a $300K+ candidate, not like a self-written job description.
 
 ### Step 5 — Reorder skills
 
@@ -625,21 +666,21 @@ Read the Skills section from `resume-bullets.md`. Reorder skill categories to fr
 
 Always generate a cover letter alongside the tailored resume — it is not optional.
 
-1. Write `output/cover-letter-{company-slug}-{date}.md` — 4-5 paragraphs, max 1 page:
-   - **Para 1:** The direct hook — what you've been doing that maps to this specific role. Name your most relevant work concretely.
-   - **Para 2:** PM/IC/SA credentials — evidence you can do the job's core function at the required level.
-   - **Para 3:** Name any real gaps directly and honestly. "The domain is new. The problem is not." Don't hide gaps — acknowledge them and show your transfer path.
-   - **Para 4:** Why this company specifically. What they're doing that matters and why you want to build it.
-   - **Para 5 (optional):** Invitation to discuss — short, warm close.
+**Voice standard:** Write as a peer-to-peer communication between two senior leaders — not a candidate appealing to a gatekeeper. The candidate has options. The writing must reflect that. Apply the full Writing Standards from CLAUDE.md.
+
+1. Write `output/cover-letter-{company-slug}-{date}.md` — 3 paragraphs max, hard cap at 3/4 of a page. Treat the limit as absolute — if it runs long, cut sentences, not ideas:
+   - **Para 1:** Open with the situation or result — never "I am applying for." State what you are doing right now that directly maps to this role. Specific numbers, named technologies, named clients. 3-4 sentences.
+   - **Para 2:** Make the case with evidence — credentials, compliance coverage, key accomplishments. If a gap exists, one direct sentence bridges it ("X is the one gap; adjacent experience in Y covers most of the ground"). No self-apologizing. 4-5 sentences.
+   - **Para 3:** One specific reason this company over any other, and a confident close. Not "I would be grateful" — something direct like "I'd welcome a conversation" or "Happy to go deeper on any of this." 2-3 sentences.
    - Sign with: name, email, phone.
    - Date: today's date.
    - Recipient: "{Company} Recruiting Team / Re: {Role Title}"
 
-2. **Rule:** Never pad. Cut anything that doesn't add signal. The reader has 30 seconds.
+2. **Hard rules:** No excited/grateful/honored language. No cliché closes ("I look forward to hearing from you"). No sentence that could apply to any company. No restating the resume in prose. 3/4 page is not a target — it's a ceiling.
 
 ### Step 8 — Generate HTML and PDF (automatic, always)
 
-PDF generation is not optional — run it automatically for every tailor command.
+PDF generation is not optional — run it automatically for every tailor command. PDFs must be generated LAST, after all content edits are complete. If any edit is made to an HTML file after a PDF was generated, regenerate the PDF immediately — never leave an HTML and its PDF out of sync.
 
 1. Convert the resume markdown to HTML at `output/resume-tailored-{company-slug}-{date}.html`:
    - Use `@page { size: letter; margin: 0.6in 0.7in; }`
@@ -667,3 +708,59 @@ PDF generation is not optional — run it automatically for every tailor command
 Append the JD's keywords to the **Keyword Frequency Tracker** table in `resume-bullets.md`. Increment count if the keyword already exists, add a new row if not. Update the "Last Seen" date.
 
 This tracks which skills employers ask for most, so the user can see which bullets are doing heavy lifting and which skills to invest in.
+
+## Resume Audit
+
+When the user runs `/job-radar resume audit`, run this flow.
+
+### Freshness check
+
+1. Read `data/last-audit.txt`. If the file doesn't exist, treat the resume as never audited.
+2. Parse the date. If it's within the last 7 days, say:
+   > "Resume audit is current (last run: {date}). Run `resume audit --force` to audit anyway."
+   Stop here unless the user passed `--force`.
+3. Otherwise, proceed with the full audit.
+
+### Full audit steps
+
+1. **Read** `resume.md` and `data/scan-history.tsv`.
+
+2. **Extract recent JD keywords** — scan the `title` column of `data/scan-history.tsv` for entries with `first_seen` in the last 30 days. Extract all significant terms (technologies, role types, domain keywords).
+
+3. **Keyword gap check** — any keyword appearing in 3+ JD titles that has no match anywhere in `resume.md` is a gap. Report them as:
+   > **Keywords in recent JDs not in your resume:**
+   > - Kubernetes (5 JDs)
+   > - CISSP (4 JDs)
+
+4. **Bullet count check** — verify bullet counts per role against the hard limits (4 for current role, 3 for all prior roles). Flag any role that exceeds the limit.
+
+5. **Forbidden phrase check** — scan for any of these patterns in `resume.md`: "responsible for", "helped", "assisted", "contributed to", "leveraged", "various", "several", "multiple", "passionate about", "results-driven", "proven track record", "etc.". Flag any matches with the line number.
+
+6. **Report** — format as a short action list:
+
+   ```
+   Resume audit — {date}
+
+   Keyword gaps (appear in 3+ recent JDs):
+     - Kubernetes (5 JDs) — not in resume
+     - CISSP (4 JDs) — not in resume
+
+   Bullet count: OK
+
+   Phrase check: 1 issue
+     - resume.md line 23: "responsible for" → rewrite as an action verb
+
+   Run `resume tailor` for a specific role to close keyword gaps.
+   ```
+
+7. **Write today's date** to `data/last-audit.txt` (overwrite if exists).
+
+## Session-start proactive audit reminder
+
+Add this check to **"Before anything"** (step 5, after the profile completeness check):
+
+Silently check `data/last-audit.txt`. If the file is missing or the date is more than 7 days ago, note it. After the user's requested command completes, append one line:
+
+> "Your resume hasn't been audited in {N} days — run `resume audit` when you have a moment."
+
+Don't block the command or repeat this message more than once per session.
