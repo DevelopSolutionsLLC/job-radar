@@ -390,6 +390,7 @@ let duplicates = 0;
 let added = 0;
 const errors = [];
 const newPostings = [];
+const allPostings = [];
 
 for (const result of results) {
   if (result.error) {
@@ -405,29 +406,31 @@ for (const result of results) {
       continue;
     }
 
-    if (seenUrls.has(job.url)) {
-      duplicates++;
-      continue;
-    }
-
+    const isNewUrl = !seenUrls.has(job.url);
     const roleKey = `${job.company}||${job.title}`.toLowerCase();
-    if (seenRoles.has(roleKey)) {
+    const isNewRole = !seenRoles.has(roleKey);
+
+    if (!isNewUrl) {
       duplicates++;
-      continue;
-    }
+    } else if (!isNewRole) {
+      duplicates++;
+    } else {
+      seenUrls.add(job.url);
+      seenRoles.add(roleKey);
 
-    seenUrls.add(job.url);
-    seenRoles.add(roleKey);
-
-    if (!dryRun) {
-      appendFileSync(HISTORY_PATH, `${job.url}\t${today}\t${result.type}\t${job.title}\t${job.company}\tadded\n`);
-      appendFileSync(PIPELINE_PATH, `- [ ] [${job.company} — ${job.title}](${job.url})\n`);
+      if (!dryRun) {
+        appendFileSync(HISTORY_PATH, `${job.url}\t${today}\t${result.type}\t${job.title}\t${job.company}\tadded\n`);
+        appendFileSync(PIPELINE_PATH, `- [ ] [${job.company} — ${job.title}](${job.url})\n`);
+      }
+      added++;
     }
 
     const relevance = scoreRelevance(job.title, job.location, resumeKeywords, targetRoles, workArrangement);
     const compatible = isLocationCompatible(job.location, workArrangement);
-    newPostings.push({ company: job.company, title: job.title, url: job.url, type: result.type, relevance, location: job.location || null, compatible });
-    added++;
+    const posting = { company: job.company, title: job.title, url: job.url, type: result.type, relevance, location: job.location || null, compatible };
+
+    if (isNewUrl && isNewRole) newPostings.push(posting);
+    if (compatible !== false && relevance >= 2) allPostings.push(posting);
   }
 }
 
@@ -493,6 +496,7 @@ if (!dryRun && !sourceFilter) {
     new_count: added,
     errors: errors.map(e => ({ source: e.source, error: e.error })),
     new_postings: newPostings,
+    all_postings: allPostings.sort((a, b) => b.relevance - a.relevance),
     suggest_add: suggestAdd.slice(0, 10).map(s => ({ name: s.name, count: s.count, avg_relevance: +(s.totalRelevance / s.count).toFixed(1) })),
   };
   saveCache(cacheData);

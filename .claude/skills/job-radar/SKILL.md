@@ -70,12 +70,9 @@ If no subcommand is given (user just types `/job-radar` or `/job-radar help`), p
 /job-radar — Job Search Pipeline
 
   Scan & Discover
-    scan                       Scan portals → pick matches → evaluate
+    scan                       Auto-discover companies + scan portals → pick matches → evaluate
     scan --force               Force fresh scan
     scan --dry-run             Preview only
-    discover                   Find hiring companies from RSS feeds
-    discover --fresh           Newest postings first
-    discover --urgent          Longest-open roles first
 
   Resume
     resume import              Import resume (paste, PDF, file, LinkedIn)
@@ -103,22 +100,18 @@ If no subcommand is given (user just types `/job-radar` or `/job-radar help`), p
 
 ### Discovery & Scanning
 
-- `/job-radar scan` → Run `node scripts/scan.mjs`. Scan results are cached for 24 hours — repeat scans within that window use cached data instead of re-fetching from ATS APIs. After results are ready (fresh or cached), follow the **Post-scan interactive flow** below.
-- `/job-radar scan --force` → Force a fresh scan, bypassing the 24-hour cache.
-- `/job-radar scan --dry-run` → Run `node scripts/scan.mjs --dry-run`. Preview only, no interactive flow.
-- `/job-radar scan --source <type>` → Scan only one ATS type (greenhouse, ashby, lever, etc.). Always fetches fresh (cache is per-full-scan).
-- `/job-radar discover` → Run `node scripts/discover.mjs`. Show tiered results.
-- `/job-radar discover --top N` → Show top N per tier.
-- `/job-radar discover --add tier1` → Auto-add tier 1 companies to portals.yml via ATS detection.
-- `/job-radar discover --add all` → Auto-add all discovered companies.
-- `/job-radar discover --fresh` → Sort by newest postings first (just posted = top).
-- `/job-radar discover --urgent` → Sort by longest-open roles first (desperate to hire).
+`scan` and `discover` are one unified flow. There is no separate `discover` command. Discover always runs **before** scan so newly found companies are included in the same scan run.
+
+- `/job-radar scan` → Run `node scripts/discover.mjs --add all` first (silent — primes portals.yml with all tier 1/2/3 companies), then `node scripts/scan.mjs`. Scan results are cached for 24 hours — on cached runs, skip discover and return cached results. After scan completes, follow the **Post-scan interactive flow** below.
+- `/job-radar scan --force` → Run `discover --add all` then `scan --force`. Bypasses 24h cache.
+- `/job-radar scan --dry-run` → Run `discover --dry-run` then `scan --dry-run`. Preview only, no interactive flow.
+- `/job-radar scan --source <type>` → Skip discover, scan only one ATS type. Always fetches fresh.
 
 #### Post-scan interactive flow
 
-After `scan` finishes (or returns cached results), do NOT just dump a summary and tell the user to go find URLs. Instead:
+After `discover` and `scan` both finish (or cached results are returned), do NOT dump a summary and tell the user to find URLs. Instead:
 
-1. **Parse the scan output JSON** (last line of scan output) to get `new_postings` with titles, companies, URLs, and `relevance` scores. The scanner already scored each posting against the user's resume keywords and target roles. If using cached results, the same data is in `data/scan-cache.json`.
+1. **Parse the scan output JSON** (last line of scan output) to get the posting pool. Use `all_postings` if present (full pool of compatible postings with relevance ≥ 2 from this scan run). Fall back to `new_postings` only if `all_postings` is absent. If using cached results, read `data/scan-cache.json` and use the same field priority.
 
 2. **Filter out incompatible postings** before ranking. A posting is incompatible if `compatible: false` in the scan output. This covers:
    - International locations when `willing_to_relocate: false`
@@ -127,52 +120,91 @@ After `scan` finishes (or returns cached results), do NOT just dump a summary an
 
    Track the excluded count — you'll show it as a footnote.
 
-3. **Sort compatible postings by relevance score** (highest first). The scanner scores by:
-   - Target role match from profile.yml (+3 exact, +2 partial, +1 keyword)
-   - Resume skills keyword overlap (+0.5 per matching word)
-   - Seniority signals (+1 for manager/director, +0.5 for senior/staff/principal)
-   - Location bonus: +1 for confirmed remote (when preference=remote), +0.5 for remote (when preference=hybrid)
+3. **Tier compatible postings** by fit quality. First, derive the candidate's seniority level from their resume:
 
-4. **Present the top 15 compatible postings as a numbered list**, mixing named companies AND RSS-discovered companies together, ranked purely by relevance. Include location when available — it lets the user filter at a glance without opening the posting:
+   **Step A — Read `resume.md`** and identify:
+   - The **current role title** (most recent position — the role at the top of the Experience section)
+   - The **career trajectory** — look at the sequence of prior titles to understand whether the candidate has been progressing on a management track, IC track, or mixed/hybrid path
+
+   **Step B — Use AI judgment to classify each posting title** (no hardcoded keywords) into one of three seniority bands relative to this candidate's resume:
+   - **Current-level** — a lateral or peer role: same or similar seniority to the candidate's current title. For example, if the current role is "Senior Manager, Software Engineering", other Senior Manager or similar-scope manager roles are current-level.
+   - **Promotion-level** — one step up: roles that represent a natural next step. For a Senior Manager this might be Director, Head of, VP. For a Staff Engineer it might be Principal or Distinguished. Use the candidate's career trajectory to inform what "one step up" means for them.
+   - **Demotion/adjacent** — roles below the candidate's current seniority, or on a different track (e.g., IC roles when the candidate is in management, or pure manager roles when the candidate has been IC-only). These may still be relevant — they just rank lower.
+
+   **Named company** — posting type is `greenhouse`, `ashby`, `lever`, `bamboohr`, `teamtailor`, or `workday` (NOT `rss`).
+
+   Assign tiers (mutually exclusive — once a posting is placed, exclude it from lower tiers):
+   - **Tier 1** — named company AND (current-level OR promotion-level title)
+     *Right seniority at a known company. Sort: current-level first, then promotion-level; each group by relevance desc.*
+   - **Tier 2** — named company AND any other relevant title (demotion, adjacent track, or any match from `targets.roles` in profile.yml)
+     *Known company, broader title match. Sort by relevance desc.*
+   - **Tier 3** — any source (RSS or named), where relevance ≥ 3 OR title is current-level or promotion-level
+     *Discovery blast — company may be unknown. Sort within tier: current-level first, then promotion-level, then other — each group by relevance desc.*
+
+4. **Present up to 15 results as a numbered list** using a backfill cascade so the total always reaches 15 (or the size of the compatible pool if smaller):
 
    ```
-   Best matches from this scan (ranked by resume fit):
+   budget_t1 = 5
+   actual_t1 = min(len(tier1), budget_t1)
+   overflow   = budget_t1 - actual_t1
 
-    1. Anthropic — Manager of Applied AI Architecture       (relevance: 5.5) · Remote
-    2. Intercom — Senior Security Engineering Manager        (relevance: 4.5) · Remote
-    3. Vanta — Staff Security Engineer                       (relevance: 4.0) · Remote  ← discovered via RSS
-    4. Stripe — Engineering Manager, Operator Tooling        (relevance: 3.5) · Remote
-    5. Contentful — Manager, Security Engineering            (relevance: 3.5) · Remote
-    ...
+   budget_t2 = 5 + overflow
+   actual_t2 = min(len(tier2), budget_t2)
+   overflow   = budget_t2 - actual_t2
+
+   budget_t3 = 5 + overflow
+   actual_t3 = min(len(tier3), budget_t3)
+   ```
+
+   Separate the three groups with a blank line. **No tier labels.** Continuous numbering 1–15. Omit a blank-line separator if the preceding group was empty.
+
+   Include location when available. Do not show tier labels to the user — just use the visual grouping.
+
+   ```
+   Best matches from this scan:
+
+    1. Stripe      — Director of Engineering, Identity          · Remote
+    2. GitLab      — Engineering Manager, AI Platform           · Remote (US)
+    3. Vanta       — Senior Manager, Corporate Engineering      · Remote
+    4. Reddit      — Director of Engineering, Ads Measurement   · Remote (US)
+    5. Instacart   — Engineering Manager, Data Platform         · Remote (US)
+
+    6. Veriff      — Senior Software Engineer, Product Platform · Remote
+    7. Toast       — Staff Engineer, Payments                   · Remote (US)
+    8. Close       — Senior Software Engineer, Backend          · Remote
+    9. Consensys   — Senior Software Engineer, MetaMask         · Remote (US)
+   10. Stellar AI  — Staff Engineer                             · Remote
+
+   11. WeWorkRemotely — Director of Engineering (Series B)      · Remote
+   12. HN Jobs        — Engineering Manager, Infra              · Remote
+   13. WeWorkRemotely — Senior Manager, Platform                · Remote
+   14. HN Jobs        — Staff Engineer, ML Platform             · Remote
+   15. WeWorkRemotely — Senior Software Engineer                · Remote
 
    Pick a number to evaluate, or multiple (e.g., "1, 3, 5").
    Type "all top" to evaluate the top 5.
    Type "skip" to finish.
 
-   14 postings excluded (location incompatible with your work arrangement).
+   229 postings excluded (location incompatible with your work arrangement).
    ```
 
-   Format the location as a short label after a `·` separator. If location is null or unknown, omit the separator entirely. Normalize common variants: "Remote, USA" → "Remote", "Remote - Texas" → "Remote (TX)", "New York, New York" → "New York, NY".
+   Format location as a short label after `·`. Take only the first segment if multiple locations are listed (split on `;`). Normalize all of these → "Remote (US)": "Remote, USA", "Remote, US", "United States - Remote", "US - Remote", "USA - Remote", "Remote- USA", "US (remote)", "USA (Remote)", "UNITED STATES - Remote". Normalize → "Remote (CA)": "Remote, Canada". Normalize → "Remote (UK)": "Remote, UK", "Remote, United Kingdom". Normalize → "Remote": bare "Remote" or "GLOBAL - Remote". Omit `·` if location is null.
 
-   Always show the excluded count as the last line so the user knows postings were filtered, not missing.
+   Show excluded count as the last line so the user knows postings were filtered, not missing.
 
-5. **If the scan found companies worth adding** (3+ matching roles, not in portals.yml), the JSON output includes a `suggest_add` array. Present these to the user:
+5. **After the posting list, show a quiet footnote** if discover added any new companies during this run. Parse the discover output for newly added company names and show one line — no action required:
 
    ```
-   Companies worth adding to your scan list:
-    → Vanta — 5 matching roles, avg relevance 3.8
-    → Datadog — 4 matching roles, avg relevance 3.2
-
-   Want me to add any of these? (e.g., "add Vanta" or "add all")
+   Added 3 companies to your scan list: Acme Corp, BuildCo, Veriff.
    ```
 
-   When the user says yes, run `node scripts/resolve-ats.mjs "<name>"` to detect the ATS and add to portals.yml — same as `/job-radar add company`.
+   If no new companies were added, omit this line entirely.
 
 6. **When the user picks a number**, look up the URL from the postings array and run the evaluate flow automatically — no URL copy-pasting needed.
 7. **After each evaluation**, offer: evaluate another, tailor a resume for one they liked, or stop.
 8. **If the user says "all top"**, evaluate the top 5 sequentially, showing a brief score summary after each.
 
-This turns scan from a data dump into an interactive session where the user goes from "scan" to "evaluate" to "tailor" without ever touching a URL. Companies from RSS feeds sit alongside named companies — the best matches float to the top regardless of source.
+This turns scan into a single interactive session that covers both active postings and company discovery. The user goes from "scan" to "evaluate" to "tailor" without ever touching a URL or running a second command.
 
 ### Resume hub
 

@@ -15,3 +15,6 @@ data/scan-cache.json
 data/tracker.md
 data/pipeline.md
 data/skills-queue.md
+data/companies.md
+data/last-audit.txt
+reports/*.md

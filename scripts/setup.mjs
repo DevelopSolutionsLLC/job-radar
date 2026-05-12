@@ -5,7 +5,7 @@
 // Exit codes: 0 = ready, 1 = needs user action (node missing)
 
 import { execSync, spawnSync } from 'node:child_process';
-import { existsSync, copyFileSync } from 'node:fs';
+import { existsSync, copyFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { platform } from 'node:os';
 
@@ -126,13 +126,38 @@ for (const { src, dest, label } of configs) {
   }
 }
 
-// 5. Check for resume
+// 5. Data files (gitignored — create empty stubs for new users)
+const dataDir = join(root, 'data');
+mkdirSync(dataDir, { recursive: true });
+
+const dataFiles = [
+  {
+    path: 'data/tracker.md',
+    content: '# Applications Tracker\n\n| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n|---|------|---------|------|-------|--------|-----|--------|-------|\n',
+    label: 'tracker.md',
+  },
+  {
+    path: 'data/pipeline.md',
+    content: '',
+    label: 'pipeline.md',
+  },
+];
+
+for (const { path: filePath, content, label } of dataFiles) {
+  const dest = join(root, filePath);
+  if (!existsSync(dest)) {
+    writeFileSync(dest, content);
+    ok(`Created ${label}`);
+  }
+}
+
+// 6. Check for resume
 const hasResume = existsSync(join(root, 'resume.md'));
 if (!hasResume) {
   skip('No resume.md yet — run /job-radar import resume to get started');
 }
 
-// 6. Summary
+// 7. Summary
 console.log('');
 if (needsAction) {
   console.log('  Some items need attention — see warnings above.\n');

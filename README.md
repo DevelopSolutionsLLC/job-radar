@@ -11,6 +11,8 @@ Job searching is broken. You spend hours on forms, lose track of what you applie
 ## **Features**
 
 - **Smart scanner** — adapter registry scans Greenhouse, Ashby, Lever, BambooHR, Teamtailor, Workday APIs + RSS feeds, all in parallel
+- **Interactive scan flow** — scan ranks the full posting pool into three tiers based on your resume, presents 15 best matches, lets you pick a number to evaluate inline — no URL copy-pasting
+- **Resume-driven tiering** — Claude reads your resume to determine your seniority level, then classifies each posting as current-level, promotion-level, or adjacent. The ranking reflects your actual career trajectory, not hardcoded keywords.
 - **Discovery engine** — finds companies actively hiring for your target roles, tiers them by signal strength and freshness
 - **ATS auto-detection** — give it a company name, it figures out which job board they use
 - **Resume import** — paste text, point to a PDF, or give a LinkedIn URL — Claude converts it to the right format
