@@ -50,7 +50,7 @@ The `/job-radar` skill command is the primary interface:
 
 ```bash
 npm run setup         # First-run setup (auto-runs on /job-radar)
-npm test              # Run 28-check test suite
+npm test              # Run test suite
 npm run scan          # Scan portals for new postings
 npm run discover      # Discovery engine — find hiring companies
 npm run resolve       # Auto-detect a company's ATS

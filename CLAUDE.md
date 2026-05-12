@@ -35,7 +35,7 @@ The primary interface is `/job-radar` — auto-discovered from `.claude/skills/j
 
 ```bash
 npm run setup                      # First-run setup (auto-runs on /job-radar)
-npm test                           # 28-check test suite
+npm test                           # Monolithic test suite (no single-test runner)
 npm run scan                       # Scan portals for new postings
 npm run discover                   # Discovery engine — find hiring companies
 npm run resolve -- "<name>"        # Auto-detect a company's ATS
@@ -44,6 +44,7 @@ npm run verify                     # Pipeline integrity check
 npm run dedup                      # Remove duplicate tracker entries
 npm run normalize                  # Fix non-canonical statuses
 npm run liveness -- <url>          # Check if a posting is still live
+npm run donate                     # Display donation QR code
 ```
 
 PDF generation requires two args: `node scripts/generate-pdf.mjs <input.html> <output.pdf>`
@@ -90,6 +91,7 @@ ESM-only project (`"type": "module"` in package.json). Two dependencies: `js-yam
 - `resume.md` — canonical CV (copy from `resume.example.md`, gitignored)
 - `resume-bullets.md` — bullet bank with keyword-tagged sections for tailored resume generation (gitignored)
 - `data/skills-queue.md` — learn-to-qualify pipeline: skills to study, prioritized by JD frequency (gitignored)
+- `data/last-audit.txt` — ISO timestamp of the last resume audit; created/updated by the skill; triggers reminder if older than 7 days (gitignored)
 - `config/profile.yml` — copy from `config/profile.example.yml` (gitignored)
 - `config/portals.yml` — copy from `config/portals.example.yml` (gitignored)
 
@@ -208,6 +210,12 @@ Six weighted dimensions (defined in `modes/evaluate.md`):
 - Role Fit (2x), Skills Match (2x), Compensation (1.5x), Company & Culture (1x), Location & Remote (1x), Growth Potential (0.5x)
 
 Each scored 1–5, overall = weighted average on a 1–5 scale.
+
+## Issue Backlog
+
+`WORKPLAN.md` tracks the current issue backlog, recommended work order, and known bugs. Check it before starting any script work.
+
+Open issues (as of last update): #10 LinkedIn/Indeed RSS proxy, #22 interactive skills gap tracking, #23 pipeline queue curation, #25 pipeline maintenance commands.
 
 ## Project Board
 

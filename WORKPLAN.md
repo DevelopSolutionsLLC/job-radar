@@ -10,11 +10,11 @@ Last updated: 2026-05-08
   - `#10` Local RSS proxy for LinkedIn and Indeed — Todo
   - `#22` Interactive skills gap: augment resume + linked training with completion tracking — Todo
   - `#23` Add pipeline queue curation and relevance cap — Todo
-  - `#24` Fix scan-history company+role dedup — Todo
   - `#25` Add pipeline maintenance commands — Todo
-- Fixed during audit:
+- Fixed:
   - Added missing open issue `#10` to the project board.
   - Created and added issues `#23`, `#24`, and `#25`.
+  - `#24` Fix scan-history company+role dedup — Done (commit 1c882f6)
 
 ## Current Local State
 
@@ -23,22 +23,11 @@ Last updated: 2026-05-08
 - `data/pipeline.md` has 5,460 lines and is too large to be usable as a human queue.
 - `data/scan-history.tsv` has 5,458 lines.
 - Scanner documentation says scan-history columns are `url`, `first_seen`, `source`, `title`, `company`, `status`.
-- `scripts/scan.mjs` currently builds the history role dedup key from columns 1 and 2, which are `first_seen` and `source`, not `company` and `title`.
+- `scripts/scan.mjs` role dedup was fixed in commit 1c882f6 — `loadDedup()` correctly reads `company` (col 4) and `title` (col 3).
 
 ## Proposed Issues
 
-### 1. Fix scan-history company+role dedup
-
-Issue: `#24`
-
-Problem: `loadDedup()` reads `scan-history.tsv` but builds the role key from the wrong columns. That means URL dedup works, but company+role dedup does not match the documented schema.
-
-Acceptance:
-- Dedup uses `company||title` from the scan-history schema.
-- Regression coverage exists in `scripts/test-all.mjs` or a focused script test.
-- Existing `npm test` remains green.
-
-### 2. Add pipeline queue curation and ranking
+### 1. Add pipeline queue curation and ranking
 
 Issue: `#23`
 
