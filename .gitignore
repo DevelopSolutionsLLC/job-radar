@@ -3,7 +3,6 @@ output/
 .env
 *.pdf
 .DS_Store
-CLAUDE.md
 
 # User-specific files (copy from *.example.* to set up)
 resume.md
