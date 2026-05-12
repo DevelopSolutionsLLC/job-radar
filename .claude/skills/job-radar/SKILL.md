@@ -4,7 +4,7 @@ description: "Job search pipeline: scan portals, evaluate postings, tailor resum
 user_invocable: true
 args: subcommand
 argument-hint: |
-  scan                  Scan portals (cached 24h, pick from results)
+  scan                  Scan portals (cached 12h, pick from results)
   scan --force          Force fresh scan, bypass cache
   scan --dry-run        Preview without writing
   resume import         Import your resume (paste, PDF, file, LinkedIn)
@@ -118,7 +118,7 @@ If no subcommand is given (user just types `/job-radar` or `/job-radar help`), p
 `scan` and `discover` are one unified flow. There is no separate `discover` command. Discover always runs **before** scan so newly found companies are included in the same scan run.
 
 - `/job-radar scan` → Run `node scripts/discover.mjs --add all` first (silent — primes portals.yml with all tier 1/2/3 companies), then `node scripts/scan.mjs`. Scan results are cached for 24 hours — on cached runs, skip discover and return cached results. After scan completes, follow the **Post-scan interactive flow** below.
-- `/job-radar scan --force` → Run `discover --add all` then `scan --force`. Bypasses 24h cache.
+- `/job-radar scan --force` → Run `discover --add all` then `scan --force`. Bypasses 12h cache.
 - `/job-radar scan --dry-run` → Run `discover --dry-run` then `scan --dry-run`. Preview only, no interactive flow.
 - `/job-radar scan --source <type>` → Skip discover, scan only one ATS type. Always fetches fresh.
 

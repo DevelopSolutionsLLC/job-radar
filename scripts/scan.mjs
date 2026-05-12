@@ -8,7 +8,7 @@ const PROFILE_PATH = 'config/profile.yml';
 const RESUME_PATH = 'resume.md';
 const HISTORY_PATH = 'data/scan-history.tsv';
 const CACHE_PATH = 'data/scan-cache.json';
-const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+const CACHE_TTL = 12 * 60 * 60 * 1000; // 12 hours
 const CONCURRENCY = 10;
 const FETCH_TIMEOUT = 10_000;
 

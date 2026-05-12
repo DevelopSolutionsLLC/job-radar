@@ -53,7 +53,7 @@ Liveness checker exit codes: 0 = ACTIVE, 1 = CLOSED, 2 = UNKNOWN
 
 Scanner flags: `--dry-run`, `--force`, `--cached`, `--source <type>` (greenhouse, ashby, lever, etc.)
 
-Scan results are cached to `data/scan-cache.json` for 24 hours. Repeat scans use cached data. `--force` bypasses cache. `--cached` returns cache without scanning (for Claude to read the pick list).
+Scan results are cached to `data/scan-cache.json` for 12 hours. Repeat scans use cached data. `--force` bypasses cache. `--cached` returns cache without scanning (for Claude to read the pick list).
 
 Cache fields: `new_postings` (postings not previously seen in scan-history), `all_postings` (full compatible pool — all title-filtered postings with relevance ≥ 2 and compatible !== false, sorted by relevance desc). The post-scan interactive flow uses `all_postings` so the pick list always shows the full ranked pool, not just the handful of genuinely new postings on a repeat scan.
 

@@ -34,7 +34,7 @@ The `/job-radar` skill command is the primary interface:
 ```
 /job-radar resume import           # Import your resume (paste, file, or LinkedIn)
 /job-radar scan                    # Auto-discover companies + scan portals → pick → evaluate
-/job-radar scan --force            # Force fresh scan, bypass 24h cache
+/job-radar scan --force            # Force fresh scan, bypass 12h cache
 /job-radar evaluate                # Score a posting (pick from list, URL, or company name)
 /job-radar resume tailor           # Build a tailored resume from your bullet bank
 /job-radar resume audit            # Check resume freshness + keyword gaps
