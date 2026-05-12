@@ -1,25 +1,23 @@
 ---
 name: job-radar
-description: "Job search pipeline: scan, discover, import resume, evaluate, tailor, gaps, learn, add company/role, status, donate"
+description: "Job search pipeline: scan portals, evaluate postings, tailor resume, track skills gaps, manage companies and roles"
 user_invocable: true
 args: subcommand
 argument-hint: |
   scan                  Scan portals (cached 24h, pick from results)
   scan --force          Force fresh scan, bypass cache
   scan --dry-run        Preview without writing
-  discover              Find hiring companies from RSS feeds
-  discover --fresh      Sort by newest postings
   resume import         Import your resume (paste, PDF, file, LinkedIn)
   resume tailor         Build a tailored resume (pick from list, URL, or name)
   resume audit          Check resume freshness + keyword gaps
   evaluate              Score a posting (pick from list, URL, or company name)
   status                Pipeline summary
+  check <url>           Verify a posting is still live
+  skills                Keyword gaps + study queue
+  list                  Show current configuration (companies, roles, profile)
   add "name or title"   Add a company, role title, or RSS feed URL
   remove "name"         Remove a company or exclude a role title
   config                Full setup wizard (location, targets, preferences)
-  check <url>           Verify a posting is still live
-  gaps                  Keyword frequency + skill gaps
-  learn                 Skills to study, ranked by demand
   donate                Support the project
   help                  Show all commands
 ---
@@ -40,7 +38,7 @@ Before executing ANY subcommand, silently run `node scripts/setup.mjs` and check
 
 3. **After node is confirmed**, the setup script auto-handles: `npm install`, Playwright chromium, config file copies. These all run without prompting.
 
-4. **If `resume.md` doesn't exist**, mention it naturally: "You don't have a resume imported yet. Want to do that first? Just run `/job-radar import resume`." Don't block — let the command proceed unless it specifically needs the resume (tailor, evaluate, gaps).
+4. **If `resume.md` doesn't exist**, mention it naturally: "You don't have a resume imported yet. Want to do that first? Just run `/job-radar import resume`." Don't block — let the command proceed unless it specifically needs the resume (tailor, evaluate, skills).
 
 5. **Profile completeness check** — After setup, read `config/profile.yml` and check for these required fields:
    - `location` — must be set (not blank, not the example value "City, State/Country")
@@ -57,6 +55,21 @@ Before executing ANY subcommand, silently run `node scripts/setup.mjs` and check
 6. **Resume audit reminder** — After the profile check, silently read `data/last-audit.txt`. If it's missing or older than 7 days, set a flag to append a one-line reminder after the current command completes:
    > "Your resume hasn't been audited in {N} days — run `resume audit` when you have a moment."
    Don't block. Don't show it more than once per session.
+
+7. **Skills queue check-in** — Silently read `data/skills-queue.md`. If it exists and has any rows where `Status` is `in progress`, or `not started` with a `Started` date set, set a flag to show the following prompt **after the current command completes** (once per session, non-blocking):
+
+   > "You have {N} skill(s) in progress — quick check-in before you go?
+   > - Kubernetes (~2 weeks) — in progress since May 6
+   > - Apache Spark (~20 hrs) — not started
+   >
+   > Type "yes" to update statuses, or "skip" to continue."
+
+   If the user says yes, for each item ask: "Have you completed [skill]? (yes / still going / not yet)"
+   - **yes** → set `Status` to `done`, set `Completed` to today's date. Then offer: "Want me to add [skill] to your resume? I'll write a bullet and add it to your skills section." If they agree, run the **Promote skill to resume** flow below.
+   - **still going** → no change
+   - **not yet** → no change
+
+   If the user says skip, do nothing. Do not show this prompt again in the same session.
 
 Only show setup output if something actually needed to be installed or configured. If everything was already ready, proceed silently to the command.
 
@@ -82,16 +95,18 @@ If no subcommand is given (user just types `/job-radar` or `/job-radar help`), p
   Evaluate & Apply
     evaluate                   Score a posting (pick from list, URL, or name)
     status                     Pipeline summary
+    check <url>                Verify a posting is still live
+
+  Skills
+    skills                     Keyword gaps + study queue
 
   Configure
+    list                       Show current configuration (companies, roles, profile)
     add "name or title"        Add a company, role title, or RSS feed URL
     remove "name or title"     Remove a company or exclude a role title
     config                     Full setup wizard (location, targets, preferences)
-    check <url>                Verify a posting is still live
 
   Other
-    gaps                       Keyword frequency + skill gaps
-    learn                      Skills to study, ranked by demand
     donate                     Support the project
     help                       Show this list
 ```
@@ -217,7 +232,44 @@ All resume-related commands route through `resume`:
 
 ### Configuration
 
-These commands modify `config/portals.yml` so the user never has to edit YAML directly.
+#### List
+
+`/job-radar list` → Read `config/portals.yml` and `config/profile.yml` and print a human-readable summary. No YAML, no file paths — just the values.
+
+Format:
+
+```
+Configuration summary
+
+  Target roles (positive)   engineer, manager, director, lead, principal
+  Excluded keywords         intern, junior, contractor, recruiter
+
+  Companies tracked         42 total
+    Greenhouse              18  (Anthropic, Stripe, Figma +15 more)
+    Ashby                    9  (Linear, Notion, Vercel +6 more)
+    Lever                    7  (Greenhouse, ... +4 more)
+    BambooHR                 4
+    Teamtailor               2
+    Workday                  2
+
+  RSS feeds                  3
+    WeWorkRemotely, HN Jobs, rss.app/...
+
+  Profile
+    Location                Austin, TX
+    Work preference         remote
+    Target roles            Senior Manager, Director of Engineering
+    Min score               3.5
+    Compensation            $150,000 min / $200,000 target
+    Company size            any
+    Deal-breakers           no equity
+```
+
+Rules:
+- Show the first 3 company names per ATS type, then "+N more" if there are more.
+- Omit any section or field that is empty or not set.
+- Format compensation as "$X min / $Y target"; omit if not set in profile.
+- If `config/profile.yml` doesn't exist yet, show only the portals summary and add: "Run `/job-radar config` to set up your profile."
 
 **Smart `add` and `remove`** — detect context automatically from the argument:
 
@@ -429,16 +481,24 @@ Store as `resume_builder.role_type`. This shapes how resume bullets are framed d
 
 ### Pipeline
 
-- `/job-radar evaluate <url or number>` → If the user provides a number (from the post-scan list) or a company name, look up the URL from `data/pipeline.md`. If they provide a URL, use it directly. Then read `modes/evaluate.md`, fetch the JD, score against resume.md, write evaluation report to reports/. Also extracts keywords, updates the frequency tracker in `resume-bullets.md`, and reports skills gaps with bullet suggestions. After evaluation, offer: "Want to tailor a resume for this one? Or pick another from the list?"
-- `/job-radar gaps` → Show the current keyword frequency tracker from `resume-bullets.md` and highlight any keywords with 3+ appearances that have no matching bullet tags.
-- `/job-radar learn` → Show `data/skills-queue.md` — the prioritized list of skills to learn, sorted by JD count. Update statuses interactively.
-- `/job-radar status` → Show pipeline summary from data/tracker.md and data/pipeline.md: counts of pending, evaluated, applied, interviewed, offered, rejected.
+- `/job-radar evaluate <url or number>` → If the user provides a number (from the post-scan list) or a company name, look up the URL from `data/scan-cache.json` (`all_postings`). If they provide a URL, use it directly. Then read `modes/evaluate.md`, fetch the JD, score against resume.md, write evaluation report to reports/. Also extracts keywords, updates the frequency tracker in `resume-bullets.md`, and reports skills gaps with bullet suggestions. After evaluation, offer: "Want to tailor a resume for this one? Or pick another from the list?"
+- `/job-radar status` → Show pipeline summary from data/tracker.md: counts of evaluated, applied, interviewed, offered, rejected. If data/scan-cache.json exists, show how many postings are available and when the cache was last updated.
 - `/job-radar check <url>` → Run `node scripts/check-liveness.mjs <url>` to verify a posting is still live.
 
-### Resume hub routing
+### Skills
 
-- `/job-radar resume tailor <url or number>` (or `/job-radar tailor`) → If the user provides a number (from the post-scan list) or a company name, look up the URL from `data/pipeline.md`. If they provide a URL, use it directly. Then read the JD, match against `resume-bullets.md`, assemble a tailored resume. See **Tailor Resume** implementation below.
-- `/job-radar resume audit` → See **Resume Audit** implementation below.
+`/job-radar skills` (also accepts `/job-radar gaps` or `/job-radar learn` as aliases — both route here):
+
+1. **Keyword gaps** — Read `resume-bullets.md` and show the frequency tracker. Highlight any keyword that appears 3+ times across evaluated JDs with no matching bullet tag. These are the gaps most likely to cost the user a screen.
+
+2. **Study queue** — Read `data/skills-queue.md` and show all rows sorted by JD count descending. Group by status: In Progress first, then Not Started, then Done (collapsed unless user asks).
+
+3. **After showing both**, ask:
+   > "Want to update any queue statuses, or add a gap keyword to the queue?"
+   - If yes to statuses: for each in-progress or not-started item, ask "Still working on [skill]? (done / still going / not yet)"
+     - done → set Status to `done`, set Completed to today. Offer to promote to resume (run **Promote skill to resume** flow).
+     - still going / not yet → no change
+   - If yes to adding gaps: for each uncovered keyword gap (3+ appearances, no bullet), ask if they want to add it to the queue. If yes, append a row to `data/skills-queue.md` with Status = `not started` and JD count from the tracker.
 
 ### Support
 
@@ -648,13 +708,15 @@ For each skill the user says "skip" (they don't have it):
 ```markdown
 # Skills Queue
 
-| Skill | JD Count | Priority | Resource | Est. Time | Status |
-|-------|----------|----------|----------|-----------|--------|
-| Kubernetes | 5 | High | killer.sh, K8s docs | ~2 weeks | not started |
-| CISSP | 3 | Medium | ISC2 free course | ~3 months | not started |
+| Skill | JD Count | Priority | Resource | Est. Time | Status | Started | Completed |
+|-------|----------|----------|----------|-----------|--------|---------|-----------|
+| Kubernetes | 5 | High | killer.sh, K8s docs | ~2 weeks | not started | — | — |
+| CISSP | 3 | Medium | ISC2 free course | ~3 months | not started | — | — |
 ```
 
-Status values: `not started`, `in progress`, `done`
+Status values: `not started`, `in progress`, `done`. Set `Started` to today's date when the user begins a skill (via the check-in flow). Set `Completed` to today's date when marked done. Use `—` for unset dates.
+
+If the skill already exists in the table (matched by name, case-insensitive), increment `JD Count` and update `Priority` if the new JD raises it — don't add a duplicate row.
 
 This turns every "skip" into a growth opportunity. The skills queue is the learn-to-qualify pipeline — it tells the user exactly what to invest in based on real market signal, not guessing.
 
@@ -740,6 +802,17 @@ PDF generation is not optional — run it automatically for every tailor command
 Append the JD's keywords to the **Keyword Frequency Tracker** table in `resume-bullets.md`. Increment count if the keyword already exists, add a new row if not. Update the "Last Seen" date.
 
 This tracks which skills employers ask for most, so the user can see which bullets are doing heavy lifting and which skills to invest in.
+
+## Promote skill to resume
+
+Run this flow when a skill is marked `done` in the skills queue check-in and the user agrees to add it.
+
+1. Ask: "Tell me about your experience with [skill] — one or two sentences, doesn't need to be polished."
+2. Rewrite their response as a resume bullet matching the tone and structure of existing bullets in `resume-bullets.md`. Show the draft and ask for approval or adjustments.
+3. Once approved:
+   - Add the bullet to the appropriate role section in `resume-bullets.md` with tags matching the skill name
+   - Add the skill to the relevant category in the Skills section of `resume.md` (if not already present)
+4. Confirm: "[Skill] added to your resume and bullet bank."
 
 ## Resume Audit
 

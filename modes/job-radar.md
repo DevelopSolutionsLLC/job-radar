@@ -4,49 +4,47 @@ Parse the user's subcommand and execute accordingly. If no subcommand is given, 
 
 ## Commands
 
-### Discovery & Scanning
+### Scan
 
-- `/job-radar scan` → Run `node scripts/scan.mjs`. Show the structured summary to the user.
-- `/job-radar scan --dry-run` → Run `node scripts/scan.mjs --dry-run`. Preview only.
-- `/job-radar scan --source <type>` → Scan only one ATS type (greenhouse, ashby, lever, etc.)
-- `/job-radar discover` → Run `node scripts/discover.mjs`. Show tiered results.
-- `/job-radar discover --top N` → Show top N per tier.
-- `/job-radar discover --add tier1` → Auto-add tier 1 companies to portals.yml via ATS detection.
-- `/job-radar discover --add all` → Auto-add all discovered companies.
-- `/job-radar discover --fresh` → Sort by newest postings first (just posted = top).
-- `/job-radar discover --urgent` → Sort by longest-open roles first (desperate to hire).
+Discovery runs automatically before every scan — there is no standalone `discover` command.
 
-### Onboarding
+- `/job-radar scan` → Run `node scripts/discover.mjs --add all` (silent), then `node scripts/scan.mjs`. On a cached run (< 24h), skip discover and return cached results. After scan, follow the **Post-scan interactive flow** in SKILL.md.
+- `/job-radar scan --force` → Run discover then scan, bypassing the 24h cache.
+- `/job-radar scan --dry-run` → Run `discover --dry-run` then `scan --dry-run`. Preview only, no interactive flow.
+- `/job-radar scan --source <type>` → Skip discover, scan only one ATS type (greenhouse, ashby, lever, etc.). Always fetches fresh.
 
-- `/job-radar import resume` → Import the user's resume into `resume.md`. Accepts pasted text, file path (PDF, DOCX, TXT, HTML, MD), or LinkedIn URL.
-- `/job-radar import resume <path>` → Import from a specific file.
+### Resume
+
+- `/job-radar resume import` (or `/job-radar import resume`) → Import the user's resume into `resume.md`. Accepts pasted text, file path (PDF, DOCX, TXT, HTML, MD), or LinkedIn URL.
+- `/job-radar resume import <path>` → Import from a specific file.
+- `/job-radar resume tailor` (or `/job-radar tailor`) → If the user provides a number (from the post-scan list) or a company name, look up the URL from `data/scan-cache.json` (`all_postings`). If they provide a URL, use it directly. Then fetch the JD, match against `resume-bullets.md`, assemble a tailored resume. See **Tailor Resume** in SKILL.md.
+- `/job-radar resume audit` → Run the **Resume Audit** flow in SKILL.md.
 
 ### Configuration
 
 These commands modify `config/portals.yml` so the user never has to edit YAML directly.
 
-- `/job-radar add role "<title>"` → Add to `title_filter.positive` in portals.yml.
-- `/job-radar remove role "<title>"` → Add to `title_filter.negative` in portals.yml.
-- `/job-radar add company "<name>"` → Run `node scripts/resolve-ats.mjs "<name>"`, parse the JSON output, and add the company to the correct section in portals.yml. Confirm what was added.
-- `/job-radar remove company "<name>"` → Remove from portals.yml. Confirm removal.
-- `/job-radar add feed <url>` → Add RSS feed URL to the `rss:` section of portals.yml.
-- `/job-radar configure` → Interactive setup: walk through target roles, location preferences, companies to track. Read and update portals.yml and config/profile.yml.
+- `/job-radar list` → Read `config/portals.yml` and `config/profile.yml` and print a human-readable summary: role filters, companies tracked by ATS type (first 3 names + count), RSS feeds, and profile settings. No YAML. Omit empty sections.
+
+- `/job-radar add <value>` → Auto-detect: URL → RSS feed; role keyword → `title_filter.positive`; otherwise → company (run `node scripts/resolve-ats.mjs`).
+- `/job-radar add company "<name>"` / `add role "<title>"` / `add feed <url>` → Explicit variants.
+- `/job-radar remove <value>` → Auto-detect: role keyword → `title_filter.negative`; otherwise → remove company from portals.yml.
+- `/job-radar remove company "<name>"` / `remove role "<title>"` → Explicit variants.
+- `/job-radar configure` / `/job-radar config` → Run the **Configure Wizard** in SKILL.md.
 
 ### Pipeline
 
-- `/job-radar evaluate <url>` → Read `modes/evaluate.md`, fetch the JD, score against resume.md, write evaluation report. Also extracts keywords, updates the frequency tracker in `resume-bullets.md`, and reports skills gaps with bullet suggestions.
-- `/job-radar gaps` → Show keyword frequency tracker and highlight gaps — keywords appearing 3+ times with no matching bullet.
-- `/job-radar learn` → Show the skills queue (`data/skills-queue.md`) — what to study next, prioritized by market demand. Update statuses interactively.
-- `/job-radar status` → Show pipeline summary from data/tracker.md and data/pipeline.md: counts of pending, evaluated, applied, interviewed, offered, rejected.
+- `/job-radar evaluate <url, number, or company name>` → Look up URL from `data/scan-cache.json` (`all_postings`) if a number or name is given; use URL directly if provided. Fetch JD, score against `resume.md`, write evaluation report to `reports/`. Extracts keywords, updates frequency tracker in `resume-bullets.md`, reports skill gaps. After evaluation, offer to tailor or pick another.
+- `/job-radar status` → Show pipeline summary from `data/tracker.md`: counts of evaluated, applied, interviewed, offered, rejected. Show cache info from `data/scan-cache.json` if present.
 - `/job-radar check <url>` → Run `node scripts/check-liveness.mjs <url>` to verify a posting is still live.
 
-### Tailoring
+### Skills
 
-- `/job-radar tailor <url>` → Fetch JD, match against `resume-bullets.md`, auto-assemble a tailored resume with the best summary + bullets for that role. Writes to `output/resume-tailored-{company}-{date}.md`. Tracks keyword frequency over time.
+- `/job-radar skills` (also `/job-radar gaps` or `/job-radar learn` — both alias here) → Two-part view: (1) keyword frequency gaps from `resume-bullets.md` — keywords with 3+ JD appearances and no matching bullet tag; (2) study queue from `data/skills-queue.md` sorted by JD count. After showing both, offer to update statuses or add gap keywords to the queue.
 
 ### Support
 
-- `/job-radar donate` → Print the donate QR + Cash App info directly as text output (not via Bash, which collapses).
+- `/job-radar donate` → Print the donate QR + Cash App info directly as text output (not via Bash).
 
 ### Help
 

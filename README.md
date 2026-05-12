@@ -32,27 +32,31 @@ Open [Claude Code](https://claude.ai/code) in this directory and run any `/job-r
 The `/job-radar` skill command is the primary interface:
 
 ```
-/job-radar import resume               # Import your resume (paste, file, or LinkedIn)
-/job-radar scan                    # Scan all portals for new postings
-/job-radar discover                # Find new companies from RSS feeds
-/job-radar discover --fresh        # Sort by newest postings first
-/job-radar add company "Anthropic" # Auto-detect ATS + add to scan list
-/job-radar add role "Engineer"     # Add to desired roles
-/job-radar evaluate <url>          # Score a posting + extract skill gaps
-/job-radar tailor <url>            # Build a tailored resume from your bullet bank
-/job-radar gaps                    # Show what the market keeps asking for
-/job-radar learn                   # Skills to study, ranked by JD frequency
+/job-radar resume import           # Import your resume (paste, file, or LinkedIn)
+/job-radar scan                    # Auto-discover companies + scan portals → pick → evaluate
+/job-radar scan --force            # Force fresh scan, bypass 24h cache
+/job-radar evaluate                # Score a posting (pick from list, URL, or company name)
+/job-radar resume tailor           # Build a tailored resume from your bullet bank
+/job-radar resume audit            # Check resume freshness + keyword gaps
+/job-radar skills                  # Keyword gaps + study queue
 /job-radar status                  # Pipeline summary
+/job-radar check <url>             # Verify a posting is still live
+/job-radar list                    # Show current config: companies, roles, feeds, profile
+/job-radar add "Anthropic"         # Auto-detect ATS + add company (or role/feed by context)
+/job-radar remove "Junior"         # Remove company or exclude role
+/job-radar config                  # Setup wizard: location, targets, preferences
 /job-radar donate                  # Support the project
 ```
 
 ## **CLI Commands**
 
+For direct script access, CI, or debugging — the skill commands above are the normal workflow.
+
 ```bash
 npm run setup         # First-run setup (auto-runs on /job-radar)
 npm test              # Run test suite
 npm run scan          # Scan portals for new postings
-npm run discover      # Discovery engine — find hiring companies
+npm run discover      # Discovery engine — find hiring companies (runs before scan automatically)
 npm run resolve       # Auto-detect a company's ATS
 npm run pdf           # Generate resume PDF
 npm run verify        # Pipeline health check
@@ -65,29 +69,31 @@ npm run liveness      # Check if a posting is still live
 
 ```
          ┌────────────────────────────────────┐
-         │      /job-radar import resume       │
+         │      /job-radar resume import       │
          │    paste / PDF / file / LinkedIn     │
          └────────────────┬───────────────────┘
                           ▼
                  resume.md + resume-bullets.md
                           │
    ┌────────────┐         │
-   │ RSS feeds  │──→ discover.mjs ──→ tier ──→ resolve ATS
-   └────────────┘                                   │
-                                                    ▼
-      portals.yml ──→ scan.mjs ──→ dedup ──→ pipeline.md
-                                                    │
-                        evaluate ←── pick a role ←──┘
-                            │
-                  ┌─────────┴─────────┐
-                  ▼                   ▼
-           write report         skills gaps
-                  │                   │
-                  ▼                   ▼
-      /job-radar tailor       /job-radar learn
-                  │                   │
-                  ▼                   ▼
-        tailored resume         skills-queue.md
+   │ RSS feeds  │──→ discover.mjs ──→ tier ──→ resolve ATS ──→ portals.yml
+   └────────────┘                                                    │
+                                                                     ▼
+                                             scan.mjs ──→ dedup ──→ scan-cache.json
+                                                                     │
+                              pick from ranked list (1–15) ←────────┘
+                                          │
+                                       evaluate
+                                          │
+                             ┌────────────┴────────────┐
+                             ▼                         ▼
+                      write report               skills gaps
+                             │                         │
+                             ▼                         ▼
+                  /job-radar resume tailor      /job-radar skills
+                             │                         │
+                             ▼                         ▼
+                   tailored resume + PDF        skills-queue.md
 ```
 
 ## **Structure**
@@ -97,7 +103,7 @@ npm run liveness      # Check if a posting is still live
 config/          Profile, portals, preferences
 modes/           Agent instructions (evaluate, scan, tailor, job-radar skill)
 scripts/         Automation (scanner, discovery, PDF gen, liveness, pipeline tools)
-data/            Tracker, pipeline inbox, scan history, discovered companies, skills queue
+data/            Tracker, scan history, scan cache, discovered companies, skills queue
 reports/         Evaluation reports
 templates/       Resume template (HTML)
 output/          Generated PDFs + tailored resumes (gitignored)

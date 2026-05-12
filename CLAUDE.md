@@ -13,29 +13,28 @@ Inspired by career-ops (`~/Documents/Claude/career-ops`) but built from scratch 
 The primary interface is `/job-radar` — auto-discovered from `.claude/skills/job-radar/SKILL.md`.
 
 ```
-/job-radar scan                    # Scan all portals for new postings
+/job-radar scan                    # Auto-discover companies + scan portals → pick matches → evaluate
+/job-radar scan --force            # Force fresh scan, bypass cache
 /job-radar scan --dry-run          # Preview without writing
-/job-radar discover                # Find new companies from RSS feeds
-/job-radar discover --fresh        # Sort by newest postings first
-/job-radar discover --urgent       # Sort by longest-open roles
-/job-radar discover --add tier1    # Auto-add tier 1 companies
-/job-radar add company "Anthropic" # Detect ATS + add to portals.yml
-/job-radar add role "Engineer"     # Add to desired roles
-/job-radar remove role "Junior"    # Add to excluded roles
-/job-radar import resume               # Import resume (paste, file, or LinkedIn)
-/job-radar import resume <path>        # Import from PDF, DOCX, TXT, HTML, MD
-/job-radar evaluate <url>          # Score + extract keywords + report gaps
-/job-radar tailor <url>            # Auto-assemble tailored resume from bullet bank
-/job-radar gaps                    # Show keyword frequency + uncovered gaps
-/job-radar learn                   # Show skills queue — what to study next
+/job-radar resume import           # Import resume (paste, file, or LinkedIn)
+/job-radar resume import <path>    # Import from PDF, DOCX, TXT, HTML, MD
+/job-radar resume tailor           # Auto-assemble tailored resume from bullet bank
+/job-radar resume audit            # Check resume freshness + keyword gaps
+/job-radar evaluate                # Score a posting (pick from list, URL, or company name)
 /job-radar status                  # Pipeline summary
+/job-radar check <url>             # Verify a posting is still live
+/job-radar skills                  # Keyword gaps + study queue (gaps/learn both alias here)
+/job-radar list                    # Show current config: companies, roles, feeds, profile
+/job-radar add "Anthropic"         # Detect ATS + add company, or add role/feed by context
+/job-radar remove "Junior"         # Remove company or exclude role
+/job-radar config                  # Full setup wizard (location, targets, preferences)
 ```
 
 ## Commands
 
 ```bash
 npm run setup                      # First-run setup (auto-runs on /job-radar)
-npm test                           # Monolithic test suite (no single-test runner)
+npm test                           # Test suite: syntax checks, config validation, file existence (no unit tests)
 npm run scan                       # Scan portals for new postings
 npm run discover                   # Discovery engine — find hiring companies
 npm run resolve -- "<name>"        # Auto-detect a company's ATS
@@ -45,6 +44,7 @@ npm run dedup                      # Remove duplicate tracker entries
 npm run normalize                  # Fix non-canonical statuses
 npm run liveness -- <url>          # Check if a posting is still live
 npm run donate                     # Display donation QR code
+node scripts/test-rss.mjs          # Test RSS feed connectivity (run standalone, not part of npm test)
 ```
 
 PDF generation requires two args: `node scripts/generate-pdf.mjs <input.html> <output.pdf>`
@@ -71,20 +71,26 @@ ESM-only project (`"type": "module"` in package.json). Two dependencies: `js-yam
 
 **Pipeline flow:** URL → fetch JD → evaluate per `modes/evaluate.md` + `resume.md` → write report → generate tailored resume → update tracker
 
-**Mode files** (`modes/`) are prompt instructions the AI agent reads at runtime. They define the evaluation rubric, resume tailoring rules, scan workflow, and the `/job-radar` skill command system. The agent follows these as its operating instructions — they are not code.
+**Skill vs modes:** `.claude/skills/job-radar/SKILL.md` is the skill entrypoint — it defines the `/job-radar` command interface and dispatch logic. `modes/` contains the runtime instruction files the agent reads during execution (evaluate, generate-resume, scan, job-radar). These are not code — they are agent operating instructions.
 
 **Scanner architecture:** Adapter registry pattern — each ATS type (greenhouse, ashby, lever, bamboohr, teamtailor, workday, rss) is a plain object with `url()`, `parse()`, and optional `method`/`headers`/`body`. One `scanSource(type, entry)` function drives all adapters. Concurrency-limited (10 parallel), 10s fetch timeout.
 
 **Discovery engine:** RSS feeds → filter by role → extract company names → score by hiring signal + freshness → tier 1/2/3. `resolve-ats.mjs` auto-detects ATS type from company name or URL.
 
 **Key directories:**
-- `modes/` — agent instruction files (evaluate, generate-resume, scan, job-radar)
+- `.claude/skills/job-radar/` — skill entrypoint (`SKILL.md`)
+- `modes/` — agent runtime instruction files (evaluate, generate-resume, scan, job-radar)
 - `config/` — profile.yml (user identity/targets), portals.yml (scanner config)
 - `scripts/` — all automation (ESM, `.mjs` files)
-- `data/` — tracker.md, pipeline.md, scan-history.tsv, companies.md
+- `data/` — tracker.md, scan-history.tsv, scan-cache.json, companies.md
 - `reports/` — evaluation reports
 - `output/` — generated PDFs (gitignored)
 - `templates/` — Resume HTML template
+- `assets/` — static assets (e.g. QR code image for donate)
+
+## Pre-approved Tool Allowlist
+
+`.claude/settings.json` pre-approves common Bash calls (all `node scripts/*.mjs` invocations, `npm install`, `npm test`, `npx playwright install chromium`) so they run without a permission prompt. When adding new scripts, add a corresponding entry there.
 
 ## Data Files
 
@@ -186,7 +192,7 @@ All sources use the adapter registry in `scripts/scan.mjs`:
 7. **RSS feeds** — WeWorkRemotely, HN Jobs, rss.app proxies for LinkedIn/Indeed
 8. **Manual paste** — user provides URL directly
 
-Scan results go to `data/pipeline.md` as pending items. `data/scan-history.tsv` has 6 columns with a header row: `url`, `first_seen`, `source`, `title`, `company`, `status`. Dedup is by URL + company+role pair.
+`data/scan-history.tsv` has 6 columns with a header row: `url`, `first_seen`, `source`, `title`, `company`, `status`. Dedup is by URL + company+role pair. Full ranked pool is saved to `data/scan-cache.json`.
 
 ## Discovery Engine
 
@@ -214,8 +220,6 @@ Each scored 1–5, overall = weighted average on a 1–5 scale.
 ## Issue Backlog
 
 `WORKPLAN.md` tracks the current issue backlog, recommended work order, and known bugs. Check it before starting any script work.
-
-Open issues (as of last update): #10 LinkedIn/Indeed RSS proxy, #22 interactive skills gap tracking, #23 pipeline queue curation, #25 pipeline maintenance commands.
 
 ## Project Board
 
