@@ -7,7 +7,6 @@ const PORTALS_PATH = 'config/portals.yml';
 const PROFILE_PATH = 'config/profile.yml';
 const RESUME_PATH = 'resume.md';
 const HISTORY_PATH = 'data/scan-history.tsv';
-const PIPELINE_PATH = 'data/pipeline.md';
 const CACHE_PATH = 'data/scan-cache.json';
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 const CONCURRENCY = 10;
@@ -420,7 +419,6 @@ for (const result of results) {
 
       if (!dryRun) {
         appendFileSync(HISTORY_PATH, `${job.url}\t${today}\t${result.type}\t${job.title}\t${job.company}\tadded\n`);
-        appendFileSync(PIPELINE_PATH, `- [ ] [${job.company} — ${job.title}](${job.url})\n`);
       }
       added++;
     }

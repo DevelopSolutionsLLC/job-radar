@@ -24,7 +24,7 @@ All ATS types are handled through a single adapter pattern in `scripts/scan.mjs`
 2. Run `node scripts/scan.mjs` to fetch all sources in parallel (10 concurrent)
 3. Filter by title (positive/negative keywords)
 4. Dedup by URL and company+role pair against `data/scan-history.tsv`
-5. New matches go to `data/pipeline.md`
+5. New matches written to `data/scan-history.tsv`; full ranked pool saved to `data/scan-cache.json`
 
 ## CLI flags
 

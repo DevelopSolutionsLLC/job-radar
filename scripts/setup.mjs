@@ -136,11 +136,6 @@ const dataFiles = [
     content: '# Applications Tracker\n\n| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n|---|------|---------|------|-------|--------|-----|--------|-------|\n',
     label: 'tracker.md',
   },
-  {
-    path: 'data/pipeline.md',
-    content: '',
-    label: 'pipeline.md',
-  },
 ];
 
 for (const { path: filePath, content, label } of dataFiles) {
