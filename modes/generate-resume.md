@@ -59,5 +59,18 @@ If `resume_builder.role_type` is not set in profile.yml, default to `hybrid`.
 
 ## Output
 
-1. Generate the tailored HTML file to `output/{company-slug}-resume.html`
-2. Run `node scripts/generate-pdf.mjs output/{company-slug}-resume.html output/{company-slug}-resume.pdf`
+See SKILL.md Step 8 for the full HTML/PDF generation spec and naming convention.
+
+Files to generate (using today's date as YYYY-MM-DD):
+- `output/resume-tailored-{company-slug}-{date}.md`
+- `output/resume-tailored-{company-slug}-{date}.html`
+- `output/resume-tailored-{company-slug}-{date}.pdf`
+- `output/cover-letter-{company-slug}-{date}.md`
+- `output/cover-letter-{company-slug}-{date}.html`
+- `output/cover-letter-{company-slug}-{date}.pdf`
+
+Run PDF generation last, after all content edits are final:
+```
+node scripts/generate-pdf.mjs output/resume-tailored-{company-slug}-{date}.html output/resume-tailored-{company-slug}-{date}.pdf
+node scripts/generate-pdf.mjs output/cover-letter-{company-slug}-{date}.html output/cover-letter-{company-slug}-{date}.pdf
+```

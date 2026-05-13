@@ -501,7 +501,7 @@ Store as `resume_builder.role_type`. This shapes how resume bullets are framed d
 
 ### Pipeline
 
-- `/job-radar evaluate <url or number>` → If the user provides a number (from the post-scan list) or a company name, look up the URL from `data/scan-cache.json` (`all_postings`). If they provide a URL, use it directly. Then read `modes/evaluate.md`, fetch the JD, score against resume.md, write evaluation report to reports/. Also extracts keywords, updates the frequency tracker in `career-bank.md`, and reports skills gaps with bullet suggestions. After evaluation, run the **Post-Evaluate Gap Check** below, then offer: "Want to tailor a resume for this one? Or pick another from the list?"
+- `/job-radar evaluate <url or number>` → If the user provides a URL, use it directly. If they provide a number (from the post-scan list): first check if the posting is already in context from the current scan session — if so, use that URL directly without re-reading any file. If not in context, run `node scripts/read-cache.mjs --top 150` to rebuild the ranked list and pick the matching index. If they provide a company or role name: run `node scripts/read-cache.mjs --find "<name>"` (returns only matching postings, max 5, a few hundred bytes). Do not read `data/scan-cache.json` directly — it can exceed 1,000 entries. Then read `modes/evaluate.md`, fetch the JD, score against resume.md, write evaluation report to reports/. Also extracts keywords, updates the frequency tracker in `career-bank.md`, and reports skills gaps with bullet suggestions. After evaluation, run the **Post-Evaluate Gap Check** below, then offer: "Want to tailor a resume for this one? Or pick another from the list?"
 
 #### Post-Evaluate Gap Check
 
@@ -589,10 +589,12 @@ https://github.com/VTChevalier
 
 ## Implementation notes
 
+**Native tools for all data file edits** — use the Read, Edit, and Write tools directly for all modifications to `data/skills.md`, `career-bank.md`, `data/tracker.md`, `resume.md`, and config files. Never spawn a shell script to read or write these files.
+
 For `add role`, `remove role`, `add company`, `remove company`, and `add feed`:
-1. Read `config/portals.yml` with js-yaml
-2. Modify the appropriate section
-3. Write back with `yaml.dump()`
+1. Use the Read tool to read `config/portals.yml`
+2. Modify the appropriate section in the YAML
+3. Use the Write tool to save the updated file
 4. Confirm the change to the user
 
 For `add company`:

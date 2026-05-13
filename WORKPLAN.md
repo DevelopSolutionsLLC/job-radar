@@ -15,7 +15,7 @@ Last updated: 2026-05-12
 
 ## Current Local State
 
-- `npm test` passes: 29 passed, 0 failed.
+- `npm test` passes: 31 passed, 0 failed.
 - `data/tracker.md` has 5 evaluated/application rows.
 - `data/pipeline.md` — **removed**. Replaced by `data/scan-cache.json` (full ranked pool) + the post-scan interactive pick list. No longer needed.
 - `data/scan-history.tsv` — dedup log, ~5,400+ lines.

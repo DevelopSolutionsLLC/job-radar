@@ -17,7 +17,7 @@ Discovery runs automatically before every scan — there is no standalone `disco
 
 - `/job-radar resume import` (or `/job-radar import resume`) → Import the user's resume into `resume.md`. Accepts pasted text, file path (PDF, DOCX, TXT, HTML, MD), or LinkedIn URL.
 - `/job-radar resume import <path>` → Import from a specific file.
-- `/job-radar resume tailor` (or `/job-radar tailor`) → If the user provides a number (from the post-scan list) or a company name, look up the URL from `data/scan-cache.json` (`all_postings`). If they provide a URL, use it directly. Then fetch the JD, match against `career-bank.md`, assemble a tailored resume. See **Tailor Resume** in SKILL.md.
+- `/job-radar resume tailor` (or `/job-radar tailor`) → If the user provides a URL, use it directly. If they provide a number from the pick list: use URL from current scan session context if available; otherwise run `node scripts/read-cache.mjs --top 150`. If they provide a company/role name: run `node scripts/read-cache.mjs --find "<name>"`. Never read `data/scan-cache.json` directly. Then fetch the JD, match against `career-bank.md`, assemble a tailored resume. See **Tailor Resume** in SKILL.md.
 - `/job-radar resume audit` → Run the **Resume Audit** flow in SKILL.md.
 
 ### Configuration
@@ -34,7 +34,7 @@ These commands modify `config/portals.yml` so the user never has to edit YAML di
 
 ### Pipeline
 
-- `/job-radar evaluate <url, number, or company name>` → Look up URL from `data/scan-cache.json` (`all_postings`) if a number or name is given; use URL directly if provided. Fetch JD, score against `resume.md`, write evaluation report to `reports/`. Extracts keywords, updates frequency tracker in `career-bank.md`, reports skill gaps. After evaluation, offer to tailor or pick another.
+- `/job-radar evaluate <url, number, or company name>` → If URL provided, use it directly. If a pick-list number is given: use URL from current scan session context if available; otherwise run `node scripts/read-cache.mjs --top 150` to rebuild the ranked list. If a company/role name is given: run `node scripts/read-cache.mjs --find "<name>"` (returns max 5 matching postings, a few hundred bytes). Never read `data/scan-cache.json` directly — it can exceed 1,000 entries. Fetch JD, score against `resume.md`, write evaluation report to `reports/`. Extracts keywords, updates frequency tracker in `career-bank.md`, reports skill gaps. After evaluation, offer to tailor or pick another.
 - `/job-radar status` → Show pipeline summary from `data/tracker.md`: counts of evaluated, applied, interviewed, offered, rejected. Show cache info from `data/scan-cache.json` if present.
 - `/job-radar check <url>` → Run `node scripts/check-liveness.mjs <url>` to verify a posting is still live.
 
@@ -53,9 +53,9 @@ These commands modify `config/portals.yml` so the user never has to edit YAML di
 ## Implementation notes
 
 For `add role`, `remove role`, `add company`, `remove company`, and `add feed`:
-1. Read `config/portals.yml` with js-yaml
-2. Modify the appropriate section
-3. Write back with `yaml.dump()`
+1. Use the Read tool to read `config/portals.yml`
+2. Modify the appropriate section in the YAML
+3. Use the Write tool to save the updated file
 4. Confirm the change to the user
 
 For `add company`:
