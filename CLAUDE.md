@@ -23,7 +23,7 @@ The primary interface is `/job-radar` — auto-discovered from `.claude/skills/j
 /job-radar evaluate                # Score a posting (pick from list, URL, or company name)
 /job-radar status                  # Pipeline summary
 /job-radar check <url>             # Verify a posting is still live
-/job-radar skills                  # Keyword gaps + study queue (gaps/learn both alias here)
+/job-radar skills                  # Keyword gaps + study queue (also: /job-radar gaps, /job-radar learn)
 /job-radar list                    # Show current config: companies, roles, feeds, profile
 /job-radar add "Anthropic"         # Detect ATS + add company, or add role/feed by context
 /job-radar remove "Junior"         # Remove company or exclude role
@@ -96,10 +96,10 @@ ESM-only project (`"type": "module"` in package.json). Two dependencies: `js-yam
 ## Data Files
 
 - `resume.md` — canonical CV (copy from `resume.example.md`, gitignored)
-- `career-bank.md` — bullet bank, summary paragraphs, and keyword frequency tracker for tailored resume generation (gitignored)
-- `data/skills.md` — learn-to-qualify pipeline: skills to study, prioritized by JD frequency (gitignored)
+- `career-bank.md` — bullet bank, summary paragraphs, and keyword frequency tracker for tailored resume generation (gitignored). Structure: numbered Summary paragraphs (1–5, role-type keyed), per-role bullet sections with `<!-- tags: keyword1, keyword2 -->` comments for keyword matching, and a Keyword Frequency Tracker table (`Keyword | Count | Last Seen`). Summaries are indexed by role type: 1=Manager+Security, 2=Manager+Platform/Product, 3=Director/VP, 4=IC/Staff, 5=AI/ML.
+- `data/skills.md` — learn-to-qualify pipeline: skills to study, prioritized by JD frequency (gitignored). Columns: `Skill | JD Count | Resource | Est. Time | Status | Started | Completed`. Status values: `not started`, `in progress`, `done`. Priority derived at display time from JD Count: High ≥ 6, Medium 3–5, Low < 3.
 - `data/last-audit.txt` — ISO timestamp of the last resume audit; created/updated by the skill; triggers reminder if older than 7 days (gitignored)
-- `config/profile.yml` — copy from `config/profile.example.yml` (gitignored)
+- `config/profile.yml` — copy from `config/profile.example.yml` (gitignored). Key fields: `location`, `work_arrangement.preference` (remote/hybrid/onsite/any), `targets.roles`, `targets.min_score`, `compensation.min/target`, `preferences.deal_breakers`, `resume_builder.role_type` (manager/ic/director/hybrid — controls bullet framing during tailoring).
 - `config/portals.yml` — copy from `config/portals.example.yml` (gitignored)
 
 Document length rules:
@@ -176,9 +176,15 @@ Evaluated, Applied, Responded, Interview, Offer, Rejected, Discarded, SKIP
 
 The normalize script maps common variants (e.g., "submitted" → Applied, "expired" → Discarded, "interviewing" → Interview).
 
-## Report Naming Convention
+## Output Naming Conventions
 
-`reports/{num}-{company-slug}-{date}.md`
+Reports: `reports/{num}-{company-slug}-{date}.md`
+
+Tailored resumes (4 files each): `output/resume-tailored-{company-slug}-{date}.{md,html,pdf}`
+
+Cover letters (4 files each): `output/cover-letter-{company-slug}-{date}.{md,html,pdf}`
+
+PDFs are always the last step. HTML and PDF must stay in sync — regenerate PDF any time the HTML changes.
 
 ## Scanner Sources
 

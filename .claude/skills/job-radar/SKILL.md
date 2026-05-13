@@ -849,7 +849,7 @@ PDF generation is not optional — run it automatically for every tailor command
    node scripts/generate-pdf.mjs output/cover-letter-{company-slug}-{date}.html output/cover-letter-{company-slug}-{date}.pdf
    ```
 
-4. Confirm the 4 output files created (2 HTML + 2 PDF) and offer to open them.
+4. After both PDFs are generated, do NOT prompt for approval or ask before generating — just confirm the output filenames in one line. Then offer to open the original job posting URL (not the PDF files) in the default browser: "Want me to open the job posting in your browser?"
 
 ### Step 9 — Update keyword tracker
 
