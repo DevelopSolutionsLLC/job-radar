@@ -7,6 +7,7 @@
     "Bash(node scripts/discover.mjs*)",
     "Bash(node scripts/resolve-ats.mjs*)",
     "Bash(node scripts/generate-pdf.mjs*)",
+    "Bash(node scripts/read-cache.mjs*)",
     "Bash(node scripts/check-liveness.mjs*)",
     "Bash(node scripts/donate.mjs)",
     "Bash(node scripts/verify-pipeline.mjs)",

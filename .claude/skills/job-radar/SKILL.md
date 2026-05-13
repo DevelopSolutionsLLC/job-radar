@@ -131,26 +131,27 @@ If no subcommand is given (user just types `/job-radar` or `/job-radar help`), p
 
 `scan` and `discover` are one unified flow. There is no separate `discover` command. Discover always runs **before** scan so newly found companies are included in the same scan run.
 
-**Scan UX rules:** Before running any scan commands, show a short status line. Do NOT narrate which bash commands you are running. Do NOT echo script output headers or raw terminal output. Show only human-readable progress:
-- Fresh scan (cache miss or --force): `"Discovering companies..."` before running discover.mjs, then `"Scanning {N} portals..."` before scan.mjs (parse source count from scan output to fill {N})
-- Cached scan: `"Loading your last scan..."` before reading scan-cache.json
-After both scripts finish (or cache is read), go directly to the post-scan pick list. Do not summarize discover output or repeat scan script headers as prose.
+**Scan UX rules:** Do NOT narrate which bash commands you are running. Do NOT echo raw script output. Show only human-readable progress:
+- Fresh scan (cache miss or --force): `"Discovering companies..."` before discover.mjs, then `"Scanning {N} portals..."` before scan.mjs
+- Cached scan: `"Loading your last scan..."` before running read-cache.mjs
+After scripts finish, go directly to the post-scan pick list. No summaries, no script headers.
 
-- `/job-radar scan` → Run `node scripts/discover.mjs --add all` first (silent — primes portals.yml with all tier 1/2/3 companies), then `node scripts/scan.mjs`. Scan results are cached for 24 hours — on cached runs, skip discover and return cached results. After scan completes, follow the **Post-scan interactive flow** below.
-- `/job-radar scan --force` → Run `discover --add all` then `scan --force`. Bypasses 12h cache.
+**Cache check — always the first step for `scan`:**
+Run `node scripts/read-cache.mjs` (single call). This returns JSON with `{ fresh, ageHours, total, excluded, postings[] }`.
+- If `fresh: true` → cached run. Show "Loading your last scan..." then proceed to the pick list using `postings`.
+- If `fresh: false` → fresh run. Run `node scripts/discover.mjs --add all` (show "Discovering companies..."), then `node scripts/scan.mjs` (show "Scanning portals..."), then run `node scripts/read-cache.mjs` again to get the updated postings.
+
+- `/job-radar scan --force` → Skip cache check. Run discover then scan, then read-cache.mjs.
 - `/job-radar scan --dry-run` → Run `discover --dry-run` then `scan --dry-run`. Preview only, no interactive flow.
 - `/job-radar scan --source <type>` → Skip discover, scan only one ATS type. Always fetches fresh.
 
 #### Post-scan interactive flow
 
-After `discover` and `scan` both finish (or cached results are returned), do NOT dump a summary and tell the user to find URLs. Instead:
+After `node scripts/read-cache.mjs` returns (or fresh scan completes), do NOT dump a summary. Instead, use the `postings` array from the JSON output directly:
 
-1. **Parse the scan output JSON** (last line of scan output) to get the posting pool. Use `all_postings` if present (full pool of compatible postings with relevance ≥ 2 from this scan run). Fall back to `new_postings` only if `all_postings` is absent. If using cached results, read `data/scan-cache.json` and use the same field priority.
+1. **The posting pool is already filtered and sorted** by `read-cache.mjs`: compatible only (no `compatible: false`), sorted by relevance desc, top 150 returned. Use `excluded` from the JSON for the footnote count.
 
-2. **Filter out incompatible postings** before ranking. A posting is incompatible if `compatible: false` in the scan output. This covers:
-   - International locations when `willing_to_relocate: false`
-   - Non-remote locations when `work_arrangement.preference` is `remote`
-   - Postings with `compatible: true` or no `compatible` field (RSS feeds with unknown location) are kept.
+2. **Filter out incompatible postings** — already done by read-cache.mjs. The `excluded` field in the JSON is the count. No additional filtering needed.
 
    Track the excluded count — you'll show it as a footnote.
 
