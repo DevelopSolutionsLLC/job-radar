@@ -501,7 +501,38 @@ Store as `resume_builder.role_type`. This shapes how resume bullets are framed d
 
 ### Pipeline
 
-- `/job-radar evaluate <url or number>` → If the user provides a number (from the post-scan list) or a company name, look up the URL from `data/scan-cache.json` (`all_postings`). If they provide a URL, use it directly. Then read `modes/evaluate.md`, fetch the JD, score against resume.md, write evaluation report to reports/. Also extracts keywords, updates the frequency tracker in `career-bank.md`, and reports skills gaps with bullet suggestions. After evaluation, offer: "Want to tailor a resume for this one? Or pick another from the list?"
+- `/job-radar evaluate <url or number>` → If the user provides a number (from the post-scan list) or a company name, look up the URL from `data/scan-cache.json` (`all_postings`). If they provide a URL, use it directly. Then read `modes/evaluate.md`, fetch the JD, score against resume.md, write evaluation report to reports/. Also extracts keywords, updates the frequency tracker in `career-bank.md`, and reports skills gaps with bullet suggestions. After evaluation, run the **Post-Evaluate Gap Check** below, then offer: "Want to tailor a resume for this one? Or pick another from the list?"
+
+#### Post-Evaluate Gap Check
+
+After writing the evaluation report, extract the Gaps list from the Skills Gap section of the report. If there are no gaps, skip this section silently.
+
+For each gap keyword:
+1. Use WebSearch to find the best free (or near-free) training resource:
+   - Query: `"[skill name] free course tutorial"` or `"[cert name] free prep guide"`
+   - Prefer: official docs → vendor free labs → Coursera audit → YouTube playlist → paid course
+   - For paid certifications: note the exam cost (e.g., "CISSP: $699 USD exam fee")
+2. Estimate time to learn honestly:
+   - < 1 week (~5–15 hrs): CLI tools, language basics, quick platform walkthroughs
+   - 1–4 weeks: Kubernetes, cert prep modules, new frameworks
+   - 1–3 months: AWS SA cert, CISSP
+   - 3+ months: OSCP, advanced ML/DL
+
+Present gaps grouped by effort (see **Skills Gap Branching Rules** for framing details):
+
+```
+⚡ Quick wins — learnable while your application is in review:
+  1. [Skill] (~[time]) — [Resource name] (free): [URL]
+
+📚 Longer investments — worth tracking:
+  2. [Skill] (~[time]) — [Resource]; [cost if paid cert]
+
+Want me to add any of these to your skills queue? (list numbers, "all", or "skip")
+```
+
+When the user selects items:
+- Add rows to `data/skills.md`: Skill, JD Count (from career-bank.md tracker or 1 if new), Resource (the URL), Est. Time, Status = `not started`, Started = `—`, Completed = `—`
+- If skill already exists in table (case-insensitive match): increment JD Count, update Resource if a better URL was found — no duplicate rows
 - `/job-radar status` → Show pipeline summary from data/tracker.md: counts of evaluated, applied, interviewed, offered, rejected. If data/scan-cache.json exists, show how many postings are available and when the cache was last updated.
 - `/job-radar check <url>` → Run `node scripts/check-liveness.mjs <url>` to verify a posting is still live.
 
@@ -716,29 +747,32 @@ For each skill the user confirms:
 4. Add the skill to the relevant category in `resume.md`'s Skills section.
 
 For each skill the user says "skip" (they don't have it):
-1. Don't just note the gap — suggest a way to close it.
-2. Recommend specific free or low-cost training resources:
-   - **Certifications**: link to the official study guide or free prep (e.g., CISSP → ISC2 free course, AWS SA → AWS Skill Builder free tier)
-   - **Technologies**: link to official docs, tutorials, or interactive labs (e.g., Kubernetes → killer.sh free playground, Terraform → HashiCorp Learn)
-   - **General**: Coursera audit mode, edX free courses, YouTube channels, official vendor training
-3. Estimate the time investment: "~2 weeks of evenings" or "~40 hours"
-4. Frame it as: "You could start this while waiting to hear back from applications."
-5. Track it in `data/skills.md` (create if it doesn't exist) so the user has a running list of skills to learn, prioritized by how often they appear in JDs:
+1. Use WebSearch to find the best free or near-free resource for that specific skill (query: `"[skill] free course"` or `"[skill] free tutorial"`).
+2. Estimate the time to learn honestly (< 1 week, 1–4 weeks, 1–3 months, 3+ months).
+3. If it's a paid certification, show the exam cost alongside the free prep.
+4. Apply effort branching (see **Skills Gap Branching Rules**):
 
-```markdown
-# Skills
+   **⚡ If < 1 week:**
+   Show the specific resource URL found, frame as "learnable while your application is in review."
+   Offer: "Add to your skills queue? If you pick this up before the interview, I can help you add it to your resume."
 
-| Skill | JD Count | Resource | Est. Time | Status | Started | Completed |
-|-------|----------|----------|-----------|--------|---------|-----------|
-| Kubernetes | 5 | killer.sh, K8s docs | ~2 weeks | not started | — | — |
-| CISSP | 3 | ISC2 free course | ~3 months | not started | — | — |
-```
+   **📚 If ≥ 1 week:**
+   Show the resource URL + cost if paid.
+   Offer: "Add to your skills queue?"
 
-Status values: `not started`, `in progress`, `done`. Set `Started` to today's date when the user begins a skill (via the check-in flow). Set `Completed` to today's date when marked done. Use `—` for unset dates. Priority is computed from JD Count when displaying: High ≥ 6, Medium 3–5, Low < 3.
+5. If user says yes: write a row to `data/skills.md`:
 
-If the skill already exists in the table (matched by name, case-insensitive), increment `JD Count` — don't add a duplicate row.
+   ```
+   | [Skill] | [JD Count from tracker or 1] | [URL] | [Est. Time] | not started | — | — |
+   ```
 
-This turns every "skip" into a growth opportunity. The skills queue is the learn-to-qualify pipeline — it tells the user exactly what to invest in based on real market signal, not guessing.
+   If skill already exists in table (case-insensitive): increment `JD Count`, update Resource if a better URL was found. No duplicate rows.
+
+6. If user says no or skip: note the gap, move on.
+
+Status values: `not started`, `in progress`, `done`. Set `Started` to today's date when the user begins a skill (via check-in). Set `Completed` when marked done. Use `—` for unset dates. Priority is computed from JD Count at display time: High ≥ 6, Medium 3–5, Low < 3.
+
+This turns every "skip" into a concrete next step — a researched path with a real URL and an honest time estimate, not a generic suggestion.
 
 ### Step 3 — Select summary paragraph
 
@@ -822,6 +856,38 @@ PDF generation is not optional — run it automatically for every tailor command
 Append the JD's keywords to the **Keyword Frequency Tracker** table in `career-bank.md`. Increment count if the keyword already exists, add a new row if not. Update the "Last Seen" date.
 
 This tracks which skills employers ask for most, so the user can see which bullets are doing heavy lifting and which skills to invest in.
+
+## Skills Gap Branching Rules
+
+These rules apply whenever a skills gap is presented to the user — in the Post-Evaluate Gap Check and in tailor Step 2. Both flows follow these rules.
+
+**Effort threshold:** < 1 week ≈ up to ~15 hours of focused self-study. Examples:
+- CLI tool basics: Terraform intro, Docker fundamentals, kubectl basics
+- Language quick-start: Go basics, Python scripting, SQL fundamentals
+- Platform walkthroughs: AWS free tier labs, GCP Qwiklabs free tier, Play with Docker
+
+**Research rules (apply to every gap):**
+- Use WebSearch: `"[skill] free course"` or `"[skill] free tutorial [current year]"`
+- Prefer: official docs > vendor free labs > Coursera audit mode > YouTube > paid course
+- For paid certifications: always state exam cost (e.g., "CISSP: $699 USD"), not just study material cost
+- Never link to paywalled or pirated content
+- If WebSearch returns nothing reliable: link the official docs page + label "free"
+
+**Quick win framing (< 1 week):**
+- Lead with ⚡ and "learnable while your application is in review"
+- Track in `data/skills.md` with Status = `not started`
+- After user marks done in check-in: offer to write a resume bullet + add to Skills section
+
+**Long investment framing (≥ 1 week):**
+- Lead with 📚 and "worth tracking — appears in [N] JDs"
+- Track in `data/skills.md` with Status = `not started`
+- Revisit in the skills check-in flow
+
+**Paid certification transparency:**
+- Always show: "[Cert] — [Free prep resource]; exam cost: $[N] USD"
+- Frame as: "The cert pays off if this role type keeps appearing — start with the free prep"
+
+---
 
 ## Promote skill to resume
 
