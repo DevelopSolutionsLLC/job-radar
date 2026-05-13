@@ -35,10 +35,11 @@ The `/job-radar` skill command is the primary interface:
 /job-radar resume import           # Import your resume (paste, file, or LinkedIn)
 /job-radar scan                    # Auto-discover companies + scan portals → pick → evaluate
 /job-radar scan --force            # Force fresh scan, bypass 12h cache
+/job-radar scan --dry-run          # Preview only, no writes
 /job-radar evaluate                # Score a posting (pick from list, URL, or company name)
 /job-radar resume tailor           # Build a tailored resume from your bullet bank
 /job-radar resume audit            # Check resume freshness + keyword gaps
-/job-radar skills                  # Keyword gaps + study queue
+/job-radar skills                  # Keyword gaps + study queue (also: /job-radar gaps, /job-radar learn)
 /job-radar status                  # Pipeline summary
 /job-radar check <url>             # Verify a posting is still live
 /job-radar list                    # Show current config: companies, roles, feeds, profile
@@ -57,12 +58,13 @@ npm run setup         # First-run setup (auto-runs on /job-radar)
 npm test              # Run test suite
 npm run scan          # Scan portals for new postings
 npm run discover      # Discovery engine — find hiring companies (runs before scan automatically)
-npm run resolve       # Auto-detect a company's ATS
+npm run resolve -- "<name>"  # Auto-detect a company's ATS
 npm run pdf           # Generate resume PDF
 npm run verify        # Pipeline health check
 npm run dedup         # Remove duplicate tracker entries
 npm run normalize     # Fix non-canonical statuses
-npm run liveness      # Check if a posting is still live
+npm run liveness -- <url>    # Check if a posting is still live
+npm run donate        # Display donation QR code
 ```
 
 ## **How It Works**

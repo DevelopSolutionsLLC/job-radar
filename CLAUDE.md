@@ -45,7 +45,7 @@ npm run normalize                  # Fix non-canonical statuses
 npm run liveness -- <url>          # Check if a posting is still live
 npm run donate                     # Display donation QR code
 node scripts/test-rss.mjs          # Test RSS feed connectivity (run standalone, not part of npm test)
-node scripts/read-cache.mjs        # Inspect scan cache: freshness, count, top postings as JSON (--top N)
+node scripts/read-cache.mjs        # Inspect scan cache: freshness, count, top postings as JSON (--top N, --find <query>)
 ```
 
 PDF generation requires two args: `node scripts/generate-pdf.mjs <input.html> <output.pdf>`
