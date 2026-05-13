@@ -67,9 +67,9 @@ Existing issue: `#22`.
 
 Acceptance:
 - Gap prompts during evaluate/tailor let the user add missing experience or skip honestly.
-- Skipped gaps are classified by effort and written to `data/skills-queue.md`.
+- Skipped gaps are classified by effort and written to `data/skills.md`.
 - Re-entry check is non-blocking.
-- Done skills can be promoted into `resume.md` and `resume-bullets.md` with user approval.
+- Done skills can be promoted into `resume.md` and `career-bank.md` with user approval.
 
 ## Recommended Order
 
@@ -82,5 +82,5 @@ Acceptance:
 ## Working Notes
 
 - Keep public issues technical and free of private resume/application details.
-- Keep personal data in ignored files: `resume.md`, `resume-bullets.md`, `config/profile.yml`, `config/portals.yml`, `data/*.md`, `data/*.tsv`, `data/*.json`, and `output/`.
+- Keep personal data in ignored files: `resume.md`, `career-bank.md`, `config/profile.yml`, `config/portals.yml`, `data/*.md`, `data/*.tsv`, `data/*.json`, and `output/`.
 - Run `npm test` after script changes.

@@ -56,7 +56,7 @@ Before executing ANY subcommand, silently run `node scripts/setup.mjs` and check
    > "Your resume hasn't been audited in {N} days — run `resume audit` when you have a moment."
    Don't block. Don't show it more than once per session.
 
-7. **Skills queue check-in** — Silently read `data/skills-queue.md`. If it exists and has any rows where `Status` is `in progress`, or `not started` with a `Started` date set, set a flag to show the following prompt **after the current command completes** (once per session, non-blocking):
+7. **Skills queue check-in** — Silently read `data/skills.md`. If it exists and has any rows where `Status` is `in progress`, or `not started` with a `Started` date set, set a flag to show the following prompt **after the current command completes** (once per session, non-blocking):
 
    > "You have {N} skill(s) in progress — quick check-in before you go?
    > - Kubernetes (~2 weeks) — in progress since May 6
@@ -70,6 +70,20 @@ Before executing ANY subcommand, silently run `node scripts/setup.mjs` and check
    - **not yet** → no change
 
    If the user says skip, do nothing. Do not show this prompt again in the same session.
+
+8. **Skills bootstrap** — Silently check `data/skills.md`. If it exists but has no data rows (only a header or is empty), AND `career-bank.md` exists with keyword frequency tracker entries where Count ≥ 3:
+
+   Run gap analysis silently:
+   - Identify all keywords in the tracker with Count ≥ 3
+   - A gap = keyword with Count ≥ 3 that has no matching tag in any bullet section of `career-bank.md`
+   - For each gap: add a row to `data/skills.md` with `JD Count` from the tracker, `Resource = —`, `Est. Time = —`, `Status = not started`, `Started = —`, `Completed = —`
+   - Sort rows by JD Count descending
+
+   After the current command completes, show one quiet line:
+   > "Seeded your skills list with {N} gaps from your JD history — run `/job-radar skills` to review."
+
+   Skip silently if: `career-bank.md` doesn't exist, no keywords with Count ≥ 3 exist, or `data/skills.md` already has data rows.
+   Do not block or interrupt the requested command.
 
 Only show setup output if something actually needed to be installed or configured. If everything was already ready, proceed silently to the command.
 
@@ -116,6 +130,11 @@ If no subcommand is given (user just types `/job-radar` or `/job-radar help`), p
 ### Discovery & Scanning
 
 `scan` and `discover` are one unified flow. There is no separate `discover` command. Discover always runs **before** scan so newly found companies are included in the same scan run.
+
+**Scan UX rules:** Before running any scan commands, show a short status line. Do NOT narrate which bash commands you are running. Do NOT echo script output headers or raw terminal output. Show only human-readable progress:
+- Fresh scan (cache miss or --force): `"Discovering companies..."` before running discover.mjs, then `"Scanning {N} portals..."` before scan.mjs (parse source count from scan output to fill {N})
+- Cached scan: `"Loading your last scan..."` before reading scan-cache.json
+After both scripts finish (or cache is read), go directly to the post-scan pick list. Do not summarize discover output or repeat scan script headers as prose.
 
 - `/job-radar scan` → Run `node scripts/discover.mjs --add all` first (silent — primes portals.yml with all tier 1/2/3 companies), then `node scripts/scan.mjs`. Scan results are cached for 24 hours — on cached runs, skip discover and return cached results. After scan completes, follow the **Post-scan interactive flow** below.
 - `/job-radar scan --force` → Run `discover --add all` then `scan --force`. Bypasses 12h cache.
@@ -481,7 +500,7 @@ Store as `resume_builder.role_type`. This shapes how resume bullets are framed d
 
 ### Pipeline
 
-- `/job-radar evaluate <url or number>` → If the user provides a number (from the post-scan list) or a company name, look up the URL from `data/scan-cache.json` (`all_postings`). If they provide a URL, use it directly. Then read `modes/evaluate.md`, fetch the JD, score against resume.md, write evaluation report to reports/. Also extracts keywords, updates the frequency tracker in `resume-bullets.md`, and reports skills gaps with bullet suggestions. After evaluation, offer: "Want to tailor a resume for this one? Or pick another from the list?"
+- `/job-radar evaluate <url or number>` → If the user provides a number (from the post-scan list) or a company name, look up the URL from `data/scan-cache.json` (`all_postings`). If they provide a URL, use it directly. Then read `modes/evaluate.md`, fetch the JD, score against resume.md, write evaluation report to reports/. Also extracts keywords, updates the frequency tracker in `career-bank.md`, and reports skills gaps with bullet suggestions. After evaluation, offer: "Want to tailor a resume for this one? Or pick another from the list?"
 - `/job-radar status` → Show pipeline summary from data/tracker.md: counts of evaluated, applied, interviewed, offered, rejected. If data/scan-cache.json exists, show how many postings are available and when the cache was last updated.
 - `/job-radar check <url>` → Run `node scripts/check-liveness.mjs <url>` to verify a posting is still live.
 
@@ -489,16 +508,16 @@ Store as `resume_builder.role_type`. This shapes how resume bullets are framed d
 
 `/job-radar skills` (also accepts `/job-radar gaps` or `/job-radar learn` as aliases — both route here):
 
-1. **Keyword gaps** — Read `resume-bullets.md` and show the frequency tracker. Highlight any keyword that appears 3+ times across evaluated JDs with no matching bullet tag. These are the gaps most likely to cost the user a screen.
+1. **Keyword gaps** — Read `career-bank.md` and show the frequency tracker. Highlight any keyword that appears 3+ times across evaluated JDs with no matching bullet tag. These are the gaps most likely to cost the user a screen.
 
-2. **Study queue** — Read `data/skills-queue.md` and show all rows sorted by JD count descending. Group by status: In Progress first, then Not Started, then Done (collapsed unless user asks).
+2. **Study queue** — Read `data/skills.md` and show all rows sorted by JD count descending. Group by status: In Progress first, then Not Started, then Done (collapsed unless user asks). Compute priority from JD Count: High ≥ 6, Medium 3–5, Low < 3.
 
 3. **After showing both**, ask:
    > "Want to update any queue statuses, or add a gap keyword to the queue?"
    - If yes to statuses: for each in-progress or not-started item, ask "Still working on [skill]? (done / still going / not yet)"
      - done → set Status to `done`, set Completed to today. Offer to promote to resume (run **Promote skill to resume** flow).
      - still going / not yet → no change
-   - If yes to adding gaps: for each uncovered keyword gap (3+ appearances, no bullet), ask if they want to add it to the queue. If yes, append a row to `data/skills-queue.md` with Status = `not started` and JD count from the tracker.
+   - If yes to adding gaps: for each uncovered keyword gap (3+ appearances, no bullet), ask if they want to add it to the queue. If yes, append a row to `data/skills.md` with Status = `not started` and JD count from the tracker.
 
 ### Support
 
@@ -675,7 +694,7 @@ Before anything else, read `config/profile.yml resume_builder.role_type`. This c
 
 ### Step 2 — Gap check (interactive)
 
-Compare the JD's required skills/keywords against `resume.md` and `resume-bullets.md` tags. Identify:
+Compare the JD's required skills/keywords against `resume.md` and `career-bank.md` tags. Identify:
 - **Covered** — keyword matches existing bullets or skills
 - **Gaps** — keyword doesn't appear anywhere in the user's materials
 
@@ -691,8 +710,8 @@ If there are gaps, present them to the user BEFORE assembling the resume:
 
 For each skill the user confirms:
 1. The user can give a quick blurb — a sentence or two about what they did. It doesn't need to be polished.
-2. Claude rewrites it as a resume bullet that matches both the JD's language and the tone/style of the user's existing bullets in `resume-bullets.md`. Show the draft and let them approve or adjust.
-3. Add the approved bullet to the appropriate role section in `resume-bullets.md` with updated tags.
+2. Claude rewrites it as a resume bullet that matches both the JD's language and the tone/style of the user's existing bullets in `career-bank.md`. Show the draft and let them approve or adjust.
+3. Add the approved bullet to the appropriate role section in `career-bank.md` with updated tags.
 4. Add the skill to the relevant category in `resume.md`'s Skills section.
 
 For each skill the user says "skip" (they don't have it):
@@ -703,26 +722,26 @@ For each skill the user says "skip" (they don't have it):
    - **General**: Coursera audit mode, edX free courses, YouTube channels, official vendor training
 3. Estimate the time investment: "~2 weeks of evenings" or "~40 hours"
 4. Frame it as: "You could start this while waiting to hear back from applications."
-5. Track it in `data/skills-queue.md` (create if it doesn't exist) so the user has a running list of skills to learn, prioritized by how often they appear in JDs:
+5. Track it in `data/skills.md` (create if it doesn't exist) so the user has a running list of skills to learn, prioritized by how often they appear in JDs:
 
 ```markdown
-# Skills Queue
+# Skills
 
-| Skill | JD Count | Priority | Resource | Est. Time | Status | Started | Completed |
-|-------|----------|----------|----------|-----------|--------|---------|-----------|
-| Kubernetes | 5 | High | killer.sh, K8s docs | ~2 weeks | not started | — | — |
-| CISSP | 3 | Medium | ISC2 free course | ~3 months | not started | — | — |
+| Skill | JD Count | Resource | Est. Time | Status | Started | Completed |
+|-------|----------|----------|-----------|--------|---------|-----------|
+| Kubernetes | 5 | killer.sh, K8s docs | ~2 weeks | not started | — | — |
+| CISSP | 3 | ISC2 free course | ~3 months | not started | — | — |
 ```
 
-Status values: `not started`, `in progress`, `done`. Set `Started` to today's date when the user begins a skill (via the check-in flow). Set `Completed` to today's date when marked done. Use `—` for unset dates.
+Status values: `not started`, `in progress`, `done`. Set `Started` to today's date when the user begins a skill (via the check-in flow). Set `Completed` to today's date when marked done. Use `—` for unset dates. Priority is computed from JD Count when displaying: High ≥ 6, Medium 3–5, Low < 3.
 
-If the skill already exists in the table (matched by name, case-insensitive), increment `JD Count` and update `Priority` if the new JD raises it — don't add a duplicate row.
+If the skill already exists in the table (matched by name, case-insensitive), increment `JD Count` — don't add a duplicate row.
 
 This turns every "skip" into a growth opportunity. The skills queue is the learn-to-qualify pipeline — it tells the user exactly what to invest in based on real market signal, not guessing.
 
 ### Step 3 — Select summary paragraph
 
-Read `resume-bullets.md` and pick the best summary paragraph based on role level + domain:
+Read `career-bank.md` and pick the best summary paragraph based on role level + domain:
 - IC/Staff/Principal → Summary #4
 - Manager/Senior Manager + Security → Summary #1
 - Manager/Senior Manager + Platform/Product → Summary #2
@@ -733,7 +752,7 @@ If the user's experience from Step 2 changes the framing (e.g., they revealed st
 
 ### Step 4 — Match bullets to JD keywords
 
-For each position in `resume-bullets.md`:
+For each position in `career-bank.md`:
 1. Read the `<!-- tags: ... -->` comments on each bullet section
 2. Score each section by how many JD keywords match its tags (including any new bullets from Step 2)
 3. Pick bullets per position: **4 for the current role, 3 for all prior roles** — never exceed these limits
@@ -744,7 +763,7 @@ For each position in `resume-bullets.md`:
 
 ### Step 5 — Reorder skills
 
-Read the Skills section from `resume-bullets.md`. Reorder skill categories to front-load whatever the JD emphasizes most. Within each category, lead with the specific tools/technologies the JD mentions.
+Read the Skills section from `career-bank.md`. Reorder skill categories to front-load whatever the JD emphasizes most. Within each category, lead with the specific tools/technologies the JD mentions.
 
 ### Step 6 — Assemble and write
 
@@ -799,7 +818,7 @@ PDF generation is not optional — run it automatically for every tailor command
 
 ### Step 9 — Update keyword tracker
 
-Append the JD's keywords to the **Keyword Frequency Tracker** table in `resume-bullets.md`. Increment count if the keyword already exists, add a new row if not. Update the "Last Seen" date.
+Append the JD's keywords to the **Keyword Frequency Tracker** table in `career-bank.md`. Increment count if the keyword already exists, add a new row if not. Update the "Last Seen" date.
 
 This tracks which skills employers ask for most, so the user can see which bullets are doing heavy lifting and which skills to invest in.
 
@@ -808,9 +827,9 @@ This tracks which skills employers ask for most, so the user can see which bulle
 Run this flow when a skill is marked `done` in the skills queue check-in and the user agrees to add it.
 
 1. Ask: "Tell me about your experience with [skill] — one or two sentences, doesn't need to be polished."
-2. Rewrite their response as a resume bullet matching the tone and structure of existing bullets in `resume-bullets.md`. Show the draft and ask for approval or adjustments.
+2. Rewrite their response as a resume bullet matching the tone and structure of existing bullets in `career-bank.md`. Show the draft and ask for approval or adjustments.
 3. Once approved:
-   - Add the bullet to the appropriate role section in `resume-bullets.md` with tags matching the skill name
+   - Add the bullet to the appropriate role section in `career-bank.md` with tags matching the skill name
    - Add the skill to the relevant category in the Skills section of `resume.md` (if not already present)
 4. Confirm: "[Skill] added to your resume and bullet bank."
 

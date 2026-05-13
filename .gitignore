@@ -6,14 +6,14 @@ output/
 
 # User-specific files (copy from *.example.* to set up)
 resume.md
-resume-bullets.md
+career-bank.md
 config/portals.yml
 config/profile.yml
 data/scan-history.tsv
 data/scan-cache.json
 data/tracker.md
 data/pipeline.md
-data/skills-queue.md
+data/skills.md
 data/companies.md
 data/last-audit.txt
 reports/*.md

@@ -95,8 +95,8 @@ ESM-only project (`"type": "module"` in package.json). Two dependencies: `js-yam
 ## Data Files
 
 - `resume.md` — canonical CV (copy from `resume.example.md`, gitignored)
-- `resume-bullets.md` — bullet bank with keyword-tagged sections for tailored resume generation (gitignored)
-- `data/skills-queue.md` — learn-to-qualify pipeline: skills to study, prioritized by JD frequency (gitignored)
+- `career-bank.md` — bullet bank, summary paragraphs, and keyword frequency tracker for tailored resume generation (gitignored)
+- `data/skills.md` — learn-to-qualify pipeline: skills to study, prioritized by JD frequency (gitignored)
 - `data/last-audit.txt` — ISO timestamp of the last resume audit; created/updated by the skill; triggers reminder if older than 7 days (gitignored)
 - `config/profile.yml` — copy from `config/profile.example.yml` (gitignored)
 - `config/portals.yml` — copy from `config/portals.example.yml` (gitignored)

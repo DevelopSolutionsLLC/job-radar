@@ -17,7 +17,7 @@ Discovery runs automatically before every scan — there is no standalone `disco
 
 - `/job-radar resume import` (or `/job-radar import resume`) → Import the user's resume into `resume.md`. Accepts pasted text, file path (PDF, DOCX, TXT, HTML, MD), or LinkedIn URL.
 - `/job-radar resume import <path>` → Import from a specific file.
-- `/job-radar resume tailor` (or `/job-radar tailor`) → If the user provides a number (from the post-scan list) or a company name, look up the URL from `data/scan-cache.json` (`all_postings`). If they provide a URL, use it directly. Then fetch the JD, match against `resume-bullets.md`, assemble a tailored resume. See **Tailor Resume** in SKILL.md.
+- `/job-radar resume tailor` (or `/job-radar tailor`) → If the user provides a number (from the post-scan list) or a company name, look up the URL from `data/scan-cache.json` (`all_postings`). If they provide a URL, use it directly. Then fetch the JD, match against `career-bank.md`, assemble a tailored resume. See **Tailor Resume** in SKILL.md.
 - `/job-radar resume audit` → Run the **Resume Audit** flow in SKILL.md.
 
 ### Configuration
@@ -34,13 +34,13 @@ These commands modify `config/portals.yml` so the user never has to edit YAML di
 
 ### Pipeline
 
-- `/job-radar evaluate <url, number, or company name>` → Look up URL from `data/scan-cache.json` (`all_postings`) if a number or name is given; use URL directly if provided. Fetch JD, score against `resume.md`, write evaluation report to `reports/`. Extracts keywords, updates frequency tracker in `resume-bullets.md`, reports skill gaps. After evaluation, offer to tailor or pick another.
+- `/job-radar evaluate <url, number, or company name>` → Look up URL from `data/scan-cache.json` (`all_postings`) if a number or name is given; use URL directly if provided. Fetch JD, score against `resume.md`, write evaluation report to `reports/`. Extracts keywords, updates frequency tracker in `career-bank.md`, reports skill gaps. After evaluation, offer to tailor or pick another.
 - `/job-radar status` → Show pipeline summary from `data/tracker.md`: counts of evaluated, applied, interviewed, offered, rejected. Show cache info from `data/scan-cache.json` if present.
 - `/job-radar check <url>` → Run `node scripts/check-liveness.mjs <url>` to verify a posting is still live.
 
 ### Skills
 
-- `/job-radar skills` (also `/job-radar gaps` or `/job-radar learn` — both alias here) → Two-part view: (1) keyword frequency gaps from `resume-bullets.md` — keywords with 3+ JD appearances and no matching bullet tag; (2) study queue from `data/skills-queue.md` sorted by JD count. After showing both, offer to update statuses or add gap keywords to the queue.
+- `/job-radar skills` (also `/job-radar gaps` or `/job-radar learn` — both alias here) → Two-part view: (1) keyword frequency gaps from `career-bank.md` — keywords with 3+ JD appearances and no matching bullet tag; (2) study queue from `data/skills.md` sorted by JD count. After showing both, offer to update statuses or add gap keywords to the queue.
 
 ### Support
 

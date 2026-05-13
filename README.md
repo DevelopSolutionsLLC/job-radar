@@ -73,7 +73,7 @@ npm run liveness      # Check if a posting is still live
          │    paste / PDF / file / LinkedIn     │
          └────────────────┬───────────────────┘
                           ▼
-                 resume.md + resume-bullets.md
+                 resume.md + career-bank.md
                           │
    ┌────────────┐         │
    │ RSS feeds  │──→ discover.mjs ──→ tier ──→ resolve ATS ──→ portals.yml
@@ -93,7 +93,7 @@ npm run liveness      # Check if a posting is still live
                   /job-radar resume tailor      /job-radar skills
                              │                         │
                              ▼                         ▼
-                   tailored resume + PDF        skills-queue.md
+                   tailored resume + PDF        skills.md
 ```
 
 ## **Structure**
