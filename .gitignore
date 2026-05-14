@@ -16,4 +16,6 @@ data/pipeline.md
 data/skills.md
 data/companies.md
 data/last-audit.txt
+data/dismissed.json
+data/session-pick-list.json
 reports/*.md
