@@ -162,8 +162,14 @@ After `node scripts/read-cache.mjs` returns (or fresh scan completes), do NOT du
 
    Read `data/session-pick-list.json` (if it exists). If it exists:
    - Compare its `cache_timestamp` field to the `scanTimestamp` from the current `read-cache.mjs` output.
-   - If they **match** → the session pick list is valid. Skip step 3 (tiering) entirely. Go directly to step 4 and display `shown` from the session file. The `excluded`/`excludedDismissed` footnotes still come from the read-cache.mjs output.
    - If they **don't match** (cache was refreshed) → ignore the session file. Proceed with step 3 to rebuild tiers. The new session file will be written after tiering.
+   - If they **match** → the scan cache is the same, but the tracker may have changed since the session file was built (user evaluated/applied/discarded entries this session). Before displaying, **reconcile `shown` against the current postings pool**:
+     1. Build a Set of valid URLs from the `postings[]` array returned by `read-cache.mjs` (these are already filtered — no tracked, no dismissed entries).
+     2. Partition `shown` into `keep` (URL is in the valid set) and `stale` (URL is no longer in the valid set — it was tracked or dismissed since this session file was written).
+     3. For each stale entry, pull a replacement from the tier buffer matching that entry's `tier` field (same cascade logic as post-evaluate slot replacement: tier 1 → t1 buffer → t2 → t3; tier 2 → t2 → t3; tier 3 → t3 only). If all buffers are empty, skip — the list may be shorter than 15.
+     4. Renumber all entries in `shown` (keep + replacements) consecutively starting at 1. Replacements go at the bottom.
+     5. Write the updated `data/session-pick-list.json`.
+     6. Proceed to step 4 with the reconciled `shown`. The `excluded`/`excludedDismissed` footnotes come from the read-cache.mjs output.
 
    If the session file doesn't exist, proceed with step 3 normally.
 
