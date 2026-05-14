@@ -889,8 +889,9 @@ Read the Skills section from `career-bank.md`. Reorder skill categories to front
 ### Step 6 — Assemble and write
 
 1. Combine: Contact → Selected Summary → Tailored positions → Education → Reordered Skills
-2. Write to `output/resume-tailored-{company-slug}-{date}.md`
-3. Show the user a diff summary:
+2. **Before writing to disk:** Run the full Editor Pass defined in `modes/generate-resume.md` against every bullet in the assembled resume. Every resume-bullet check must pass. Rewrite anything that fires. Specifically: check for near-duplicate bullets within each role and blend or cut before writing.
+3. Write to `output/resume-tailored-{company-slug}-{date}.md`
+4. Show the user a diff summary:
    - Which summary was picked
    - Which bullet categories were chosen per role
    - Which skills were front-loaded
@@ -903,14 +904,16 @@ Always generate a cover letter alongside the tailored resume — it is not optio
 **Voice standard:** Write as a peer-to-peer communication between two senior leaders — not a candidate appealing to a gatekeeper. The candidate has options. The writing must reflect that. Apply the full Writing Standards from CLAUDE.md.
 
 1. Write `output/cover-letter-{company-slug}-{date}.md` — 3 paragraphs max, hard cap at 3/4 of a page. Treat the limit as absolute — if it runs long, cut sentences, not ideas:
-   - **Para 1:** Open with the situation or result — never "I am applying for." State what you are doing right now that directly maps to this role. Specific numbers, named technologies, named clients. 3-4 sentences.
+   - **Para 1:** Open with a concrete fact or result from the candidate's own work — never "I am applying for", never a domain insight or wisdom statement. Banned openers: "Building X requires more than Y" (domain observation, not candidate fact), "When X happens, Y happens" (industry insight), any sentence that could open a blog post or think-piece instead of a letter. State what you are doing right now that directly maps to this role. Specific numbers, named technologies, named clients. 3-4 sentences.
    - **Para 2:** Make the case with evidence — credentials, compliance coverage, key accomplishments. If a gap exists, one direct sentence bridges it ("X is the one gap; adjacent experience in Y covers most of the ground"). No self-apologizing. 4-5 sentences.
-   - **Para 3:** One specific reason this company over any other, and a confident close. Not "I would be grateful" — something direct like "I'd welcome a conversation" or "Happy to go deeper on any of this." 2-3 sentences.
+   - **Para 3:** One specific reason this company over any other, and a confident close. Not "I would be grateful" or "I'd be glad to" — something direct like "I can start a conversation in the next two weeks" or "Happy to go deeper on any of this." 2-3 sentences. **The final sentence must not be a one-liner flourish or self-summary** ("That's where I do my best work", "That's the job", "That feedback loop is where I do my best work") — close with logistics and an invitation, nothing more.
    - Sign with: name, email, phone.
    - Date: today's date.
    - Recipient: "{Company} Recruiting Team / Re: {Role Title}"
 
 2. **Hard rules:** No excited/grateful/honored language. No cliché closes ("I look forward to hearing from you"). No sentence that could apply to any company. No restating the resume in prose. 3/4 page is not a target — it's a ceiling.
+
+3. **Before writing to disk:** Run the full Editor Pass defined in `modes/generate-resume.md` against the cover letter draft. Every cover-letter check must pass. Rewrite anything that fires. Do not write the file until the pass is clean.
 
 ### Step 8 — Generate HTML and PDF (automatic, always)
 

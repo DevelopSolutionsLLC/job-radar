@@ -125,17 +125,23 @@ Before finalizing any cover letter or resume, self-audit against the AI-tell che
 
 **Structural tells — prohibited:**
 - Narrative-frame openers: "The engineering story is...", "The X problem is...", "What X is building is..."
-- Hollow qualifiers: "more than the usual X", "exactly the kind of X", "the best possible way", "in all the right ways"
-- Pithy one-liner paragraph closers: "The race is the truth-teller.", "That's the job.", "That feedback loop matters."
+- Wisdom/insight openers that read as domain commentary rather than candidate facts: "Building X requires more than Y", "When X happens, Y happens", "X is harder than it looks" — if the first sentence of a cover letter could open a blog post or think-piece, rewrite it as a specific result or situation from the candidate's actual work
+- Hollow qualifiers: "more than the usual X", "exactly the kind of X", "the best possible way", "in all the right ways", "exactly where I want to operate", "exactly what X needs"
+- Pithy one-liner paragraph closers: "The race is the truth-teller.", "That's the job.", "That feedback loop matters.", "That feedback loop is where I do my best work.", "That's where I do my best work."
 - Mechanical parallel triplets that feel constructed, not spoken: "serve a deeply engaged audience, compete on experience, and survive at scale"
+- Mechanical expertise-proof triplets assembled to project authority: "I know how X works, what Y needs, and where Z fails" — three perfectly parallel knowledge claims read as template output, not as human writing
 - "treating X with the same Y as Z" constructions
 - "rather than" contrast used more than once per document
+- "where the line between X and Y was deliberately blurred" — blog-post framing for a dual role; state what the role actually was
+- "a bias toward X over Y" as a standalone self-description sentence — a cliché in every engineering cover letter; show the preference through a specific decision or result instead
+- Near-duplicate bullets in the same role: two bullets that describe the same project, the same framework, or share 5+ consecutive words are a quality failure — blend into one or cut the weaker one
 - Any sentence that reads like it was assembled from a template
 
 **Tone tells — prohibited:**
 - Braggy editorializing: "unforgiving in the best possible way", "moves faster or gets out of the way", "that most teams never achieve"
 - Self-congratulatory framing that the reader would never say out loud about themselves
 - Clever observations about the company's product that read as performance ("your audience knows immediately when the app is slow")
+- Time-compression clichés: "reducing X to days", "quarters to days", "made months into days" — these sound invented; state the actual before/after metric or cut the claim
 
 **Test:** Read each sentence aloud. If it sounds like a TED Talk, a LinkedIn post, or a ChatGPT output, rewrite it as plain declarative prose.
 
