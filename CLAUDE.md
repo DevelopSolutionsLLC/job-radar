@@ -113,7 +113,31 @@ Document length rules:
 
 ## Writing Standards
 
-Every resume and cover letter produced by this pipeline must meet the bar a top-tier professional resume writer would set for a senior candidate targeting Apple, Google, Microsoft, Meta, or equivalent. The candidate is not desperate — they are desirable. The writing must reflect that.
+Every resume and cover letter produced by this pipeline must meet the bar a $400/hr professional resume editor would set for a senior candidate targeting Apple, Google, Microsoft, Meta, or equivalent. The output must read like a human professional wrote it. There must be zero tells that AI produced it. The candidate is not desperate — they are desirable. The writing must reflect that.
+
+Before finalizing any cover letter or resume, self-audit against the AI-tell checklist below. If any item fires, rewrite that sentence.
+
+### AI-Tell Checklist (apply to every cover letter and resume bullet before output)
+
+**Punctuation tells — prohibited:**
+- Em dashes "—" used as inline clause separators. Use a comma, semicolon, or rewrite the sentence. Em dashes in resumes for company/date formatting are fine; em dashes splitting a sentence in half are not.
+- Parenthetical asides set off by em dashes: "a subscription sports media product — one that has to survive at scale — is exactly..."
+
+**Structural tells — prohibited:**
+- Narrative-frame openers: "The engineering story is...", "The X problem is...", "What X is building is..."
+- Hollow qualifiers: "more than the usual X", "exactly the kind of X", "the best possible way", "in all the right ways"
+- Pithy one-liner paragraph closers: "The race is the truth-teller.", "That's the job.", "That feedback loop matters."
+- Mechanical parallel triplets that feel constructed, not spoken: "serve a deeply engaged audience, compete on experience, and survive at scale"
+- "treating X with the same Y as Z" constructions
+- "rather than" contrast used more than once per document
+- Any sentence that reads like it was assembled from a template
+
+**Tone tells — prohibited:**
+- Braggy editorializing: "unforgiving in the best possible way", "moves faster or gets out of the way", "that most teams never achieve"
+- Self-congratulatory framing that the reader would never say out loud about themselves
+- Clever observations about the company's product that read as performance ("your audience knows immediately when the app is slow")
+
+**Test:** Read each sentence aloud. If it sounds like a TED Talk, a LinkedIn post, or a ChatGPT output, rewrite it as plain declarative prose.
 
 ### Resume Bullets
 
@@ -122,7 +146,7 @@ Every resume and cover letter produced by this pipeline must meet the bar a top-
 **Bullet counts per role (hard limits):**
 - Current role: 4 bullets max
 - All prior roles: 3 bullets max
-- Blend two bullets into one when they prove a stronger combined point or together address a skill gap — a tight blended bullet beats two thin separate ones
+- Blend two bullets into one when they prove a stronger combined point or together address a skill gap. A tight blended bullet beats two thin ones.
 - Never pad to hit the limit; never exceed it
 
 **Required:**
@@ -130,6 +154,7 @@ Every resume and cover letter produced by this pipeline must meet the bar a top-
 - Quantify wherever possible: headcount, budget, client count, time saved, percentage improvement, revenue impact, scale (users, endpoints, requests)
 - One idea per bullet, fully formed
 - Prefer specific nouns over vague categories: "Tenable, Qualys, Rapid7" not "security tools"; "10-person" not "a team"
+- Use commas and periods. No em dash clause separators inside bullets.
 
 **Forbidden:**
 - "Responsible for" — rewrite as an action
@@ -139,25 +164,32 @@ Every resume and cover letter produced by this pipeline must meet the bar a top-
 - "Passionate about", "results-driven", "proven track record" — show, don't tell
 - "Etc." — name them or stop the list
 - Passive voice when active is possible
-- Stylistic flourishes that read as AI: echo structures ("not as X, as Y"), rhetorical contrasts ("the right kind"), self-congratulatory editorializing ("that most teams never achieve")
+- AI structural patterns: "treating X with the same Y as Z", "rather than waiting on", echo structures ("not as X, as Y"), rhetorical contrasts ("the right kind")
+- Em dashes splitting a bullet into two halves — rewrite as one clean sentence
 
 ### Cover Letters
 
-**Voice:** Peer-to-peer. The reader is a senior leader evaluating a candidate who has options. Write like someone who belongs in the room, not someone hoping to get in.
+**Voice:** Peer-to-peer. The reader is a senior leader evaluating a candidate who has options. Write like someone who belongs in the room, not someone hoping to get in. Every sentence is plain, direct, and specific. No performance. No flourish.
 
 **Required:**
-- Open with the result or the situation — never "I am applying for" or "I am excited to"
-- Every sentence must carry signal: a number, a named technology, a concrete outcome
-- Confident close — not "I would be grateful", not "I look forward to hearing from you"
-- If there's a skills gap, one direct sentence bridges it — no paragraph dedicated to self-apologizing
+- Open with a concrete situation, fact, or result — never "I am applying for" or "I am excited to"
+- Every sentence must carry signal: a number, a named technology, a named company, a concrete outcome
+- Confident, short close: a direct statement that the comp/logistics work, an invitation to talk. No more than two sentences.
+- If there is a skills gap, one sentence names it plainly with no apology. No paragraph dedicated to gap-bridging.
+- Vary sentence length. Short sentences after long ones. No three-sentence stretch of identical structure.
 
 **Forbidden:**
 - "I am excited/thrilled/honored to apply"
 - "I believe I could", "I hope to", "I think I might" — hedge language
 - "I look forward to hearing from you" — cliché
 - "Thank you for your time/consideration"
-- Any sentence that could apply to any company or any job
+- Any sentence that could appear in a cover letter for a different company without editing
 - Restating the resume in prose form
+- Em dashes as clause separators anywhere in the letter
+- Narrative frames: "The X story is...", "What X is building is...", "The X problem is..."
+- Hollow qualifiers and braggy editorializing (see AI-Tell Checklist above)
+- Pithy one-liners at paragraph ends
+- Mechanical parallel lists that feel assembled rather than written
 
 ## Tracker Schema (data/tracker.md)
 

@@ -16,7 +16,7 @@ Job searching is broken. You spend hours on forms, lose track of what you applie
 - **Discovery engine** — finds companies actively hiring for your target roles, tiers them by signal strength and freshness
 - **ATS auto-detection** — give it a company name, it figures out which job board they use
 - **Resume import** — paste text, point to a PDF, or give a LinkedIn URL — Claude converts it to the right format
-- **Bullet bank + tailored resumes** — modular resume system with keyword-tagged bullets, auto-assembled per job description with role-level targeting
+- **Bullet bank + tailored resumes** — modular resume system with keyword-tagged bullets, auto-assembled per job description with role-level targeting; enforced writing standards eliminate AI tells, em dash clause separators, hollow qualifiers, and braggy editorializing
 - **Skills intelligence** — every evaluation extracts keywords, tracks frequency, reports gaps, and suggests new resume bullets
 - **Learn-to-qualify pipeline** — skills you don't have get queued with free training resources, prioritized by market demand
 - **Offer evaluation** — weighted scoring across 6 dimensions against your resume

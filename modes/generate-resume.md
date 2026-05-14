@@ -57,6 +57,34 @@ If `resume_builder.role_type` is not set in profile.yml, default to `hybrid`.
 - Never fabricate experience or skills
 - Never invent metrics or numbers that aren't in the source material
 
+## Writing Quality Enforcement
+
+Both the resume and cover letter must pass this checklist before output. Rewrite any sentence that fails.
+
+**Prohibited everywhere:**
+- Em dashes "—" used to split a sentence into two halves. Use a comma, semicolon, or rewrite.
+- "Responsible for", "Helped", "Assisted with", "Leveraged", "Various", "Several", "Multiple", "Etc."
+- Passive voice where active is possible
+- AI structural patterns: "treating X with the same Y as Z", "rather than waiting on", echo structures
+
+**Cover letter — prohibited:**
+- Narrative frames: "The engineering story is...", "What [company] is building is...", "The X problem is..."
+- Hollow qualifiers: "more than the usual X", "exactly the kind of X", "in the best possible way"
+- Pithy one-liner closers: "The race is the truth-teller.", "That's the job."
+- Braggy editorializing: "unforgiving in the best possible way", "moves faster or gets out of the way"
+- Mechanical parallel triplets that read assembled rather than written
+- "I am excited/thrilled/honored to apply", "I look forward to hearing from you", "Thank you for your consideration"
+- Any sentence that could appear unedited in a cover letter for a different company
+
+**Cover letter — required:**
+- Open with a concrete fact, situation, or result
+- Every sentence carries a number, a named technology, or a specific outcome
+- Gap acknowledged in one plain sentence, no apology
+- Close: two sentences max, direct statement that logistics work, invite to talk
+- Sentence length varies — short sentences after long ones
+
+**Standard:** The output must read like a $400/hr professional resume editor wrote it. No AI tells. A senior hiring manager should not be able to distinguish it from a letter a human professional crafted.
+
 ## Output
 
 See SKILL.md Step 8 for the full HTML/PDF generation spec and naming convention.
