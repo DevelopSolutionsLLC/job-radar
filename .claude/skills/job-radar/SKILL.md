@@ -149,11 +149,25 @@ Run `node scripts/read-cache.mjs` (single call). This returns JSON with `{ fresh
 
 After `node scripts/read-cache.mjs` returns (or fresh scan completes), do NOT dump a summary. Instead, use the `postings` array from the JSON output directly:
 
-1. **The posting pool is already filtered and sorted** by `read-cache.mjs`: compatible only (no `compatible: false`), sorted by relevance desc, top 150 returned. Use `excluded` from the JSON for the footnote count.
+1. **The posting pool is already filtered and sorted** by `read-cache.mjs`: compatible only (no `compatible: false`), tracker-matched and snoozed postings removed, sorted by relevance desc, top 150 returned. The JSON now includes:
+   - `excluded` — total filtered (incompatible + already tracked + snoozed)
+   - `excludedTracked` — count filtered because they're in tracker.md
+   - `excludedDismissed` — count filtered because they were snoozed (dismissed.json)
 
-2. **Filter out incompatible postings** — already done by read-cache.mjs. The `excluded` field in the JSON is the count. No additional filtering needed.
+2. **Filter out incompatible postings** — already done by read-cache.mjs. No additional filtering needed.
 
-   Track the excluded count — you'll show it as a footnote.
+   Track `excludedTracked` and `excludedDismissed` separately — you'll show them as footnotes.
+
+2a. **Session pick list check — do this BEFORE tiering:**
+
+   Read `data/session-pick-list.json` (if it exists). If it exists:
+   - Compare its `cache_timestamp` field to the `scanTimestamp` from the current `read-cache.mjs` output.
+   - If they **match** → the session pick list is valid. Skip step 3 (tiering) entirely. Go directly to step 4 and display `shown` from the session file. The `excluded`/`excludedDismissed` footnotes still come from the read-cache.mjs output.
+   - If they **don't match** (cache was refreshed) → ignore the session file. Proceed with step 3 to rebuild tiers. The new session file will be written after tiering.
+
+   If the session file doesn't exist, proceed with step 3 normally.
+
+   **OUTPUT RULE (non-negotiable):** Between outputting "Loading your last scan..." and outputting "Best matches from this scan:", output zero lines of text. No cache status, no session status, no match confirmation, no explanatory text. Any text here exposes backend plumbing to the user — that is always wrong.
 
 3. **Tier compatible postings** by fit quality. First, derive the candidate's seniority level from their resume:
 
@@ -175,6 +189,16 @@ After `node scripts/read-cache.mjs` returns (or fresh scan completes), do NOT du
      *Known company, broader title match. Sort by relevance desc.*
    - **Tier 3** — any source (RSS or named), where relevance ≥ 3 OR title is current-level or promotion-level
      *Discovery blast — company may be unknown. Sort within tier: current-level first, then promotion-level, then other — each group by relevance desc.*
+
+   **After tiering, write `data/session-pick-list.json`** (do this during step 3, before displaying the list):
+   - `cache_timestamp`: the `scanTimestamp` value from the read-cache.mjs output
+   - `built_at`: current ISO timestamp
+   - `shown`: the 15 postings that will be displayed (after the backfill cascade in step 4), each with `{ slot, tier, url, company, title, location }`
+   - `buffers.t1`: ALL tier-1 candidates beyond what's shown (pre-classified — no extra work needed)
+   - `buffers.t2`: ALL tier-2 candidates beyond what's shown
+   - `buffers.t3`: ALL tier-3 candidates beyond what's shown
+
+   Writing the session file adds no visible latency — it's just serializing data already in context.
 
 4. **Present up to 15 results as a numbered list** using a backfill cascade so the total always reaches 15 (or the size of the compatible pool if smaller):
 
@@ -221,11 +245,14 @@ After `node scripts/read-cache.mjs` returns (or fresh scan completes), do NOT du
    Type "skip" to finish.
 
    229 postings excluded (location incompatible with your work arrangement).
+   14 postings snoozed from previous scans.
    ```
 
    Format location as a short label after `·`. Take only the first segment if multiple locations are listed (split on `;`). Normalize all of these → "Remote (US)": "Remote, USA", "Remote, US", "United States - Remote", "US - Remote", "USA - Remote", "Remote- USA", "US (remote)", "USA (Remote)", "UNITED STATES - Remote". Normalize → "Remote (CA)": "Remote, Canada". Normalize → "Remote (UK)": "Remote, UK", "Remote, United Kingdom". Normalize → "Remote": bare "Remote" or "GLOBAL - Remote". Omit `·` if location is null.
 
-   Show excluded count as the last line so the user knows postings were filtered, not missing.
+   Show the excluded count as a footnote line so the user knows postings were filtered, not missing. If `excludedDismissed > 0`, add a second footnote line: `{N} postings snoozed from previous scans.` Omit it if `excludedDismissed` is 0 or absent.
+
+   Note: Discarded tracker entries are automatically suppressed for 60 days from their date, then reappear in the pick list. Snoozed (skipped) postings are suppressed for 30 days. All other tracker statuses (Applied, Evaluated, Interview, etc.) are suppressed indefinitely.
 
 5. **After the posting list, show a quiet footnote** if discover added any new companies during this run. Parse the discover output for newly added company names and show one line — no action required:
 
@@ -235,9 +262,60 @@ After `node scripts/read-cache.mjs` returns (or fresh scan completes), do NOT du
 
    If no new companies were added, omit this line entirely.
 
-6. **When the user picks a number**, look up the URL from the postings array and run the evaluate flow automatically — no URL copy-pasting needed.
-7. **After each evaluation**, offer: evaluate another, tailor a resume for one they liked, or stop.
+6. **When the user picks a number**, look up the URL from the `shown` array in `data/session-pick-list.json` (or from the postings array if the session file wasn't written yet) and run the evaluate flow automatically — no URL copy-pasting needed.
+7. **After each evaluation**:
+   - If score ≥ `targets.min_score` (from profile.yml): automatically run the full tailor flow (resume + cover letter + PDFs) without asking — then open the job posting URL in the browser with `open <url>`, then ask: **"Did you apply? (y/n)"**
+     - **y** → add to tracker.md with status `Applied`, include PDF links in the PDF column
+     - **n** → add to tracker.md with status `Evaluated`, no PDF links; offer to pick another from the list
+   - If score < `targets.min_score`: add to tracker.md with status `Discarded`; offer to pick another from the list or stop.
+
+   **MANDATORY — slot replacement (do this before any user prompting):**
+   Every evaluate outcome (Applied, Evaluated, Discarded) must trigger a slot replacement. Do not skip this step.
+
+   1. Read `data/session-pick-list.json`
+   2. Remove the evaluated posting from `shown`
+   3. Renumber all remaining `shown` entries consecutively starting at slot 1
+   4. Pull the next candidate from the tier buffer matching the removed entry's `tier` field:
+      - `tier: 1` → pull from `buffers.t1`; if empty, try `buffers.t2`; if still empty, `buffers.t3`
+      - `tier: 2` → pull from `buffers.t2`; if empty, try `buffers.t3`
+      - `tier: 3` → pull from `buffers.t3`
+   5. If the matching buffer (and all fallback buffers) are empty, do a lazy refill before giving up:
+      a. Run `node scripts/read-cache.mjs --top 150`
+      b. Filter out all URLs currently in `shown`
+      c. Classify the remaining postings into tiers using the same logic as step 3
+      d. Populate `buffers.t1/t2/t3` with ALL newly classified candidates
+      e. Write the updated session file
+      f. Pull from the appropriate tier buffer
+      If even after lazy refill no candidates exist, show the list with fewer than 15 entries (final fallback only).
+   6. Append the replacement at slot = (length of remaining shown + 1) — always goes at the bottom
+   7. Write the updated `data/session-pick-list.json`
+   8. Display the full refreshed pick list with `*` next to the new entry
+
+   **Then** offer to pick another from the list or stop.
+
 8. **If the user says "all top"**, evaluate the top 5 sequentially, showing a brief score summary after each.
+9. **When the user types "skip"** — snooze all postings from the current pick list that were NOT evaluated in this session:
+
+   - Collect the URLs + company + title for every posting in the 15-item list that the user did not pick for evaluation.
+   - Read `data/dismissed.json` (parse as array; treat as `[]` if missing or unreadable).
+   - For each unselected posting, upsert into the array using `url` as the dedup key:
+     ```json
+     {
+       "url": "...",
+       "company": "...",
+       "title": "...",
+       "shown_at": "<current ISO timestamp>",
+       "hide_until": "<current ISO timestamp + 30 days>"
+     }
+     ```
+     If the URL already exists, overwrite the entry (resets the 30-day window).
+   - Write the updated array back to `data/dismissed.json`.
+   - Delete `data/session-pick-list.json` (use Bash `rm -f`) so stale session state doesn't persist into the next session.
+   - Output exactly one quiet line (no blank line before it):
+     ```
+     {N} postings snoozed for 30 days.
+     ```
+   - Do NOT show this snooze line if every posting in the pick list was evaluated (nothing left to snooze).
 
 This turns scan into a single interactive session that covers both active postings and company discovery. The user goes from "scan" to "evaluate" to "tailor" without ever touching a URL or running a second command.
 
@@ -501,7 +579,7 @@ Store as `resume_builder.role_type`. This shapes how resume bullets are framed d
 
 ### Pipeline
 
-- `/job-radar evaluate <url or number>` → If the user provides a URL, use it directly. If they provide a number (from the post-scan list): first check if the posting is already in context from the current scan session — if so, use that URL directly without re-reading any file. If not in context, run `node scripts/read-cache.mjs --top 150` to rebuild the ranked list and pick the matching index. If they provide a company or role name: run `node scripts/read-cache.mjs --find "<name>"` (returns only matching postings, max 5, a few hundred bytes). Do not read `data/scan-cache.json` directly — it can exceed 1,000 entries. Then read `modes/evaluate.md`, fetch the JD, score against resume.md, write evaluation report to reports/. Also extracts keywords, updates the frequency tracker in `career-bank.md`, and reports skills gaps with bullet suggestions. After evaluation, run the **Post-Evaluate Gap Check** below, then offer: "Want to tailor a resume for this one? Or pick another from the list?"
+- `/job-radar evaluate <url or number>` → If the user provides a URL, use it directly. If they provide a number (from the post-scan list): first check if the posting is already in context from the current scan session — if so, use that URL directly without re-reading any file. If not in context, run `node scripts/read-cache.mjs --top 150` to rebuild the ranked list and pick the matching index. If they provide a company or role name: run `node scripts/read-cache.mjs --find "<name>"` (returns only matching postings, max 5, a few hundred bytes). Do not read `data/scan-cache.json` directly — it can exceed 1,000 entries. Then read `modes/evaluate.md`, fetch the JD, score against resume.md, write evaluation report to reports/. Also extracts keywords, updates the frequency tracker in `career-bank.md`, and reports skills gaps with bullet suggestions. After evaluation, run the **Post-Evaluate Gap Check** below. If score ≥ `targets.min_score`, automatically proceed to the full tailor flow (resume + cover letter + PDFs + open URL) without asking — do not wait for user confirmation. If score < `targets.min_score`, add to tracker as Discarded and offer to pick another.
 
 #### Post-Evaluate Gap Check
 
@@ -851,7 +929,9 @@ PDF generation is not optional — run it automatically for every tailor command
    node scripts/generate-pdf.mjs output/cover-letter-{company-slug}-{date}.html output/cover-letter-{company-slug}-{date}.pdf
    ```
 
-4. After both PDFs are generated, do NOT prompt for approval or ask before generating — just confirm the output filenames in one line. Then offer to open the original job posting URL (not the PDF files) in the default browser: "Want me to open the job posting in your browser?"
+4. After both PDFs are generated, confirm the output filenames in one line. Then automatically open the original job posting URL (not the PDF files) in the default browser with `open <url>` — do not ask first. Then ask: **"Did you apply? (y/n)"**
+   - **y** → add to tracker.md with status `Applied`, include PDF links in the PDF column
+   - **n** → add to tracker.md with status `Evaluated`, no PDF links; offer next steps
 
 ### Step 9 — Update keyword tracker
 
