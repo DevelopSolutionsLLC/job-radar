@@ -127,7 +127,8 @@ Before finalizing any cover letter or resume, self-audit against the AI-tell che
 - Narrative-frame openers: "The engineering story is...", "The X problem is...", "What X is building is..."
 - Wisdom/insight openers that read as domain commentary rather than candidate facts: "Building X requires more than Y", "When X happens, Y happens", "X is harder than it looks" — if the first sentence of a cover letter could open a blog post or think-piece, rewrite it as a specific result or situation from the candidate's actual work
 - Hollow qualifiers: "more than the usual X", "exactly the kind of X", "the best possible way", "in all the right ways", "exactly where I want to operate", "exactly what X needs"
-- Pithy one-liner paragraph closers: "The race is the truth-teller.", "That's the job.", "That feedback loop matters.", "That feedback loop is where I do my best work.", "That's where I do my best work."
+- Pithy one-liner paragraph closers: "The race is the truth-teller.", "That's the job.", "That feedback loop matters.", "That feedback loop is where I do my best work.", "That's where I do my best work.", "Moving from X to Y is the work I'm signing up for.", "Building the runtime is the work I'm here to do." — any declarative sentence that closes a paragraph with a performance flourish instead of a fact
+- Scene-setter openers followed by a colon: "The scope here is compelling: ...", "The challenge here is [adjective]: ..." — hollow framing that says nothing about the candidate; cut the opener and start with the substance
 - Mechanical parallel triplets that feel constructed, not spoken: "serve a deeply engaged audience, compete on experience, and survive at scale"
 - Mechanical expertise-proof triplets assembled to project authority: "I know how X works, what Y needs, and where Z fails" — three perfectly parallel knowledge claims read as template output, not as human writing
 - "treating X with the same Y as Z" constructions
@@ -142,6 +143,8 @@ Before finalizing any cover letter or resume, self-audit against the AI-tell che
 - Self-congratulatory framing that the reader would never say out loud about themselves
 - Clever observations about the company's product that read as performance ("your audience knows immediately when the app is slow")
 - Time-compression clichés: "reducing X to days", "quarters to days", "made months into days" — these sound invented; state the actual before/after metric or cut the claim
+- Robotic logistics-acknowledgment: "The comp range works.", "The pay range works.", "The range works for me." — no professional says this out loud; if you must acknowledge logistics, write it as a human would ("Comp and remote both work." or just "I can connect in the next two weeks.")
+- Repeating the same tic phrase across multiple letters: "I'd rather name that directly", "paper over it", "I won't pretend otherwise" — each is fine once; appearing in more than one document in a session makes it a recognizable AI pattern
 
 **Test:** Read each sentence aloud. If it sounds like a TED Talk, a LinkedIn post, or a ChatGPT output, rewrite it as plain declarative prose.
 

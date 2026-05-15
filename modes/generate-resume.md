@@ -74,7 +74,9 @@ Both the resume and cover letter must pass this checklist before output. Rewrite
 - Narrative frames: "The engineering story is...", "What [company] is building is...", "The X problem is..."
 - Wisdom/insight openers: "Building X requires more than Y", "When X happens, Y happens", "X is harder than it looks" — if the first sentence could open a blog post, rewrite it as a specific candidate fact or result
 - Hollow qualifiers: "more than the usual X", "exactly the kind of X", "in the best possible way", "exactly where I want to operate", "exactly what X needs"
-- Pithy one-liner closers: "The race is the truth-teller.", "That's the job.", "That feedback loop is where I do my best work.", "That's where I do my best work."
+- Pithy one-liner closers: "The race is the truth-teller.", "That's the job.", "That feedback loop is where I do my best work.", "That's where I do my best work.", "Moving from X to Y is the work I'm signing up for." — any declarative performance flourish that closes a paragraph
+- Scene-setter openers with colon: "The scope here is compelling: ...", "The challenge here is [adjective]: ..." — hollow framing; cut the opener and start with the substance
+- Robotic logistics-acknowledgment: "The comp range works.", "The pay range works." — write it as a human would or skip it
 - Braggy editorializing: "unforgiving in the best possible way", "moves faster or gets out of the way"
 - Mechanical parallel triplets that read assembled rather than written
 - Mechanical expertise-proof triplets: "I know X, what Y needs, and where Z fails" — three perfectly parallel knowledge claims read as template output
@@ -114,6 +116,8 @@ After drafting the resume and cover letter, run this pass in full before writing
 - No "exactly where I want to operate" / "exactly what X needs"
 - No "moves faster or gets out of the way" type performative observations about the company
 - No "I'd be glad to" / "I'd be happy to" — use "I can" or "Happy to"
+- No "The comp range works" / "The pay range works" — robotic logistics phrasing no human writes
+- No "The scope here is compelling" / "The X here is [adjective]:" opener constructions — cut and start with substance
 - No sentence that could appear unedited in a letter for a different company
 - Para 3 (close): two sentences max, no flourish ending
 
