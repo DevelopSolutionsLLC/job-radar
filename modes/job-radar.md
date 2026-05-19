@@ -8,7 +8,7 @@ Parse the user's subcommand and execute accordingly. If no subcommand is given, 
 
 Discovery runs automatically before every scan — there is no standalone `discover` command.
 
-- `/job-radar scan` → Run `node scripts/discover.mjs --add all` (silent), then `node scripts/scan.mjs`. On a cached run (< 12h), skip discover and return cached results. After scan, follow the **Post-scan interactive flow** in SKILL.md.
+- `/job-radar scan` → Run `node scripts/discover.mjs --add all` (silent), then `node scripts/scan.mjs`. On a cached run (< 12h), skip discover and return cached results. After scan, follow the **Post-scan interactive flow** in SKILL.md. The post-scan flow includes an optional pre-screen: after presenting the 15-entry pick list, the skill offers to score all 15 JDs in parallel and annotate the list with ✓/✗ indicators (✓ = ≥ min_score) before the user picks.
 - `/job-radar scan --force` → Run discover then scan, bypassing the 12h cache.
 - `/job-radar scan --dry-run` → Run `discover --dry-run` then `scan --dry-run`. Preview only, no interactive flow.
 - `/job-radar scan --source <type>` → Skip discover, scan only one ATS type (greenhouse, ashby, lever, etc.). Always fetches fresh.

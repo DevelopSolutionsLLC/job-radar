@@ -1,6 +1,6 @@
 # job-radar Work Plan
 
-Last updated: 2026-05-12
+Last updated: 2026-05-16
 
 ## Board Audit
 
@@ -32,6 +32,12 @@ Acceptance:
 - Generate standard RSS XML or local feed files consumed by the existing RSS adapter.
 - Cache proxy output locally.
 - Keep the main scanner file-based; no always-on service required.
+
+## Completed This Session (2026-05-16)
+
+- **RSS reserved slots** (`scripts/read-cache.mjs`) — Guaranteed 10 slots (10% of topN) for RSS postings in the top-150 output. Previously, 1,100+ non-RSS postings filled all slots and RSS postings were unreachable. Backfill cascade: unused RSS slots flow to non-RSS and vice versa.
+- **Title-proximity sort across all tiers** (`.claude/skills/job-radar/SKILL.md`) — Primary sort key is seniority match to candidate's current title (current-level → promotion-level → other) within each tier. Relevance score is tiebreaker. Previously T1/T2 sorted by relevance only.
+- **Pre-screen mode** (`.claude/skills/job-radar/SKILL.md`, `modes/evaluate.md`) — Post-scan offer to score all 15 pick-list JDs in parallel using the existing 6-dimension weighted system. Score-only: no report file written, no keyword tracker update, no skills gap output. Results shown inline with ✓/✗ indicators against min_score threshold.
 
 ## Recommended Order
 

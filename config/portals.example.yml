@@ -119,3 +119,7 @@ rss:
     url: https://weworkremotely.com/categories/remote-programming-jobs.rss
   - name: HN Jobs
     url: https://hnrss.org/jobs
+  - name: RemoteOK
+    url: https://remoteok.io/remote-jobs.rss
+  - name: Remotive
+    url: https://remotive.com/feed

@@ -58,6 +58,12 @@ Scan results are cached to `data/scan-cache.json` for 12 hours. Repeat scans use
 
 Cache fields: `new_postings` (postings not previously seen in scan-history), `all_postings` (full compatible pool — all title-filtered postings with relevance ≥ 2 and compatible !== false, sorted by relevance desc). The post-scan interactive flow uses `all_postings` so the pick list always shows the full ranked pool, not just the handful of genuinely new postings on a repeat scan.
 
+**Tier sort order:** Across all tiers (T1, T2, T3), title proximity to the candidate's current position is the primary sort key. Sort within each tier: current-level titles first, promotion-level second, other/adjacent third. Relevance score breaks ties within each band.
+
+**Pick list layout:** Up to 20 entries in four fixed groups — 5 T1 (named company, right seniority), 5 T2 (named company, any title), 5 T3 (discovery/RSS), 5 Local (postings within `local_radius_miles` of `home_zip`). No overflow cascade between remote tiers. If `home_zip` is not set or no local postings found, the 4th group is omitted and the total is 15. Local entries are sorted by `distanceMiles` ascending (closest first).
+
+**Pre-screen:** After displaying the pick list, the skill offers to fetch all shown JD URLs in parallel (up to 20), score each with the 6-dimension weighted system (score-only — no report written, no tracker updated), and re-display the list with ✓ (≥ min_score) / ✗ indicators.
+
 Discovery flags: `--dry-run`, `--top N`, `--fresh`, `--urgent`, `--add tier1|all`
 
 ## Prerequisites
@@ -100,7 +106,8 @@ ESM-only project (`"type": "module"` in package.json). Two dependencies: `js-yam
 - `data/skills.md` — learn-to-qualify pipeline: skills to study, prioritized by JD frequency (gitignored). Columns: `Skill | JD Count | Resource | Est. Time | Status | Started | Completed`. Status values: `not started`, `in progress`, `done`. Priority derived at display time from JD Count: High ≥ 6, Medium 3–5, Low < 3.
 - `data/last-audit.txt` — ISO timestamp of the last resume audit; created/updated by the skill; triggers reminder if older than 7 days (gitignored)
 - `data/session-pick-list.json` — session-scoped pick list with pre-classified tier buffers; written on first scan, read on subsequent scans in the same session (skips full tiering); cleared on "skip"; gitignored
-- `config/profile.yml` — copy from `config/profile.example.yml` (gitignored). Key fields: `location`, `work_arrangement.preference` (remote/hybrid/onsite/any), `targets.roles`, `targets.min_score`, `compensation.min/target`, `preferences.deal_breakers`, `resume_builder.role_type` (manager/ic/director/hybrid — controls bullet framing during tailoring).
+- `config/profile.yml` — copy from `config/profile.example.yml` (gitignored). Key fields: `location`, `work_arrangement.preference` (remote/hybrid/onsite/any), `work_arrangement.home_zip` (zip code used for proximity-based local tier detection), `work_arrangement.local_radius_miles` (cities within this radius appear as local; default 100), `work_arrangement.max_commute_miles` (for hybrid/onsite preference filtering only), `targets.roles`, `targets.min_score`, `compensation.min/target`, `preferences.deal_breakers`, `resume_builder.role_type` (manager/ic/director/hybrid — controls bullet framing during tailoring).
+- `data/geocode-cache.json` — persistent cache of Nominatim geocoding results (city name → lat/lon); populated on first scan with `home_zip` set, near-instant on subsequent scans; gitignored.
 - `config/portals.yml` — copy from `config/portals.example.yml` (gitignored)
 
 Document length rules:
@@ -148,6 +155,10 @@ Before finalizing any cover letter or resume, self-audit against the AI-tell che
 
 **Test:** Read each sentence aloud. If it sounds like a TED Talk, a LinkedIn post, or a ChatGPT output, rewrite it as plain declarative prose.
 
+### Resume Tailoring
+
+**Role completeness (non-negotiable):** Never omit a role from the candidate's timeline when tailoring. Every role in `resume.md` must appear in every tailored resume. If space is tight, reduce bullets to the per-role minimum (1 bullet); never cut an entire role. The complete work history must be present.
+
 ### Resume Bullets
 
 **Structure:** Action verb → what/how → result or scale. Every bullet earns its place with specificity.
@@ -181,17 +192,18 @@ Before finalizing any cover letter or resume, self-audit against the AI-tell che
 **Voice:** Peer-to-peer. The reader is a senior leader evaluating a candidate who has options. Write like someone who belongs in the room, not someone hoping to get in. Every sentence is plain, direct, and specific. No performance. No flourish.
 
 **Required:**
-- Open with a concrete situation, fact, or result — never "I am applying for" or "I am excited to"
+- Open like an email: salutation "Hello," on its own line/paragraph, then the body starts in the next paragraph with "My name is Victor Chevalier and I'm reaching out about the [exact role title] at [Company]." That intro sentence is followed in the same paragraph by a sentence grounding the reader in Victor's relevant prior experience. Never open cold with a fact, domain observation, or "I am excited to."
 - Every sentence must carry signal: a number, a named technology, a named company, a concrete outcome
-- Confident, short close: a direct statement that the comp/logistics work, an invitation to talk. No more than two sentences.
-- If there is a skills gap, one sentence names it plainly with no apology. No paragraph dedicated to gap-bridging.
+- Confident, short close: use an affirmative, forward-looking opener ("Looking forward to connecting.") followed by a brief sign-off thank-you. No more than three sentences total. End with a name-only sign-off ("Victor"). Acceptable closing thank-yous: "Thanks for your time.", "Thanks for reading.", "Appreciate the time." — short and casual, not ceremonial.
+- Never acknowledge gaps, shortcomings, or missing credentials. Do not name what you don't have. Name only what you bring.
 - Vary sentence length. Short sentences after long ones. No three-sentence stretch of identical structure.
+- Every cover letter HTML file must include a contact header immediately after `<body>`: `<div class="contact">Victor Chevalier · vtchevalier@proton.me · 512.765.5740</div>` with `.contact { font-size: 9pt; color: #555; margin-bottom: 16px; }` in the style block.
 
 **Forbidden:**
 - "I am excited/thrilled/honored to apply"
 - "I believe I could", "I hope to", "I think I might" — hedge language
 - "I look forward to hearing from you" — cliché
-- "Thank you for your time/consideration"
+- "Thank you for your time and consideration" or any multi-word ceremonial variant — use the short casual form instead ("Thanks for your time.")
 - Any sentence that could appear in a cover letter for a different company without editing
 - Restating the resume in prose form
 - Em dashes as clause separators anywhere in the letter

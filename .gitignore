@@ -18,4 +18,5 @@ data/companies.md
 data/last-audit.txt
 data/dismissed.json
 data/session-pick-list.json
+data/geocode-cache.json
 reports/*.md

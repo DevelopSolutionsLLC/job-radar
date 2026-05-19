@@ -156,7 +156,7 @@ After `node scripts/read-cache.mjs` returns (or fresh scan completes), do NOT du
 
 2. **Filter out incompatible postings** — already done by read-cache.mjs. No additional filtering needed.
 
-   Track `excludedTracked` and `excludedDismissed` separately — you'll show them as footnotes.
+   The `excludedTracked` and `excludedDismissed` counts are available in the JSON but are not shown to the user inline — they are internal metrics only.
 
 2a. **Session pick list check — do this BEFORE tiering:**
 
@@ -166,10 +166,10 @@ After `node scripts/read-cache.mjs` returns (or fresh scan completes), do NOT du
    - If they **match** → the scan cache is the same, but the tracker may have changed since the session file was built (user evaluated/applied/discarded entries this session). Before displaying, **reconcile `shown` against the current postings pool**:
      1. Build a Set of valid URLs from the `postings[]` array returned by `read-cache.mjs` (these are already filtered — no tracked, no dismissed entries).
      2. Partition `shown` into `keep` (URL is in the valid set) and `stale` (URL is no longer in the valid set — it was tracked or dismissed since this session file was written).
-     3. For each stale entry, pull a replacement from the tier buffer matching that entry's `tier` field (same cascade logic as post-evaluate slot replacement: tier 1 → t1 buffer → t2 → t3; tier 2 → t2 → t3; tier 3 → t3 only). If all buffers are empty, skip — the list may be shorter than 15.
+     3. For each stale entry, pull a replacement from the tier buffer matching that entry's `tier` field (same cascade logic as post-evaluate slot replacement: tier 1 → t1 buffer → t2 → t3; tier 2 → t2 → t3; tier 3 → t3 only; local → buffers.local only, no cascade). If all buffers are empty, skip — the list may be shorter than 20.
      4. Renumber all entries in `shown` (keep + replacements) consecutively starting at 1. Replacements go at the bottom.
      5. Write the updated `data/session-pick-list.json`.
-     6. Proceed to step 4 with the reconciled `shown`. The `excluded`/`excludedDismissed` footnotes come from the read-cache.mjs output.
+     6. Proceed to step 4 with the reconciled `shown`.
 
    If the session file doesn't exist, proceed with step 3 normally.
 
@@ -188,40 +188,46 @@ After `node scripts/read-cache.mjs` returns (or fresh scan completes), do NOT du
 
    **Named company** — posting type is `greenhouse`, `ashby`, `lever`, `bamboohr`, `teamtailor`, or `workday` (NOT `rss`).
 
-   Assign tiers (mutually exclusive — once a posting is placed, exclude it from lower tiers):
+   **Before assigning T1/T2/T3**, split the compatible postings into two pools:
+   - **`localPool`** — postings where `distanceMiles` is not null. `scan.mjs` pre-computes this by geocoding each unique non-remote job city and measuring haversine distance from `home_zip`. Any city within `local_radius_miles` of home gets a numeric `distanceMiles` value. If `home_zip` is not configured in `config/profile.yml`, or if the scan was run with `--dry-run`, `distanceMiles` is always null and `localPool` is always empty.
+   - **`remotePool`** — all remaining compatible postings (anything where `distanceMiles` is null).
+
+   T1/T2/T3 tiering operates **only on `remotePool`**. Local postings never compete for remote-tier slots.
+
+   **Local pool sort:** Sort `localPool` by `distanceMiles` ascending (closest to home first). Within the same distance band (within 5 miles of each other), sort current-level titles above promotion-level, then other. Relevance breaks ties within the same distance + title band.
+
+   Assign tiers from `remotePool` (mutually exclusive — once a posting is placed, exclude it from lower tiers):
    - **Tier 1** — named company AND (current-level OR promotion-level title)
      *Right seniority at a known company. Sort: current-level first, then promotion-level; each group by relevance desc.*
    - **Tier 2** — named company AND any other relevant title (demotion, adjacent track, or any match from `targets.roles` in profile.yml)
-     *Known company, broader title match. Sort by relevance desc.*
+     *Known company, broader title match. Sort: current-level first, then promotion-level, then other; each group by relevance desc.*
    - **Tier 3** — any source (RSS or named), where relevance ≥ 3 OR title is current-level or promotion-level
-     *Discovery blast — company may be unknown. Sort within tier: current-level first, then promotion-level, then other — each group by relevance desc.*
+     *Discovery blast — company may be unknown. Sort: current-level first, then promotion-level, then other; each group by relevance desc.*
+
+   **Across all tiers, title proximity to the candidate's current position is the primary sort key.** Relevance score breaks ties within each title band. A current-level manager role at a lesser-known company always ranks above a high-relevance IC role within the same tier.
 
    **After tiering, write `data/session-pick-list.json`** (do this during step 3, before displaying the list):
    - `cache_timestamp`: the `scanTimestamp` value from the read-cache.mjs output
    - `built_at`: current ISO timestamp
-   - `shown`: the 15 postings that will be displayed (after the backfill cascade in step 4), each with `{ slot, tier, url, company, title, location }`
-   - `buffers.t1`: ALL tier-1 candidates beyond what's shown (pre-classified — no extra work needed)
+   - `shown`: up to 20 postings that will be displayed (see step 4 for slot allocation), each with `{ slot, tier, url, company, title, location }`. Local entries use `tier: "local"`.
+   - `buffers.t1`: ALL tier-1 candidates beyond what's shown
    - `buffers.t2`: ALL tier-2 candidates beyond what's shown
    - `buffers.t3`: ALL tier-3 candidates beyond what's shown
+   - `buffers.local`: ALL localPool candidates beyond what's shown
 
    Writing the session file adds no visible latency — it's just serializing data already in context.
 
-4. **Present up to 15 results as a numbered list** using a backfill cascade so the total always reaches 15 (or the size of the compatible pool if smaller):
+4. **Present up to 20 results as a numbered list.** Each tier and the local pool get exactly 5 slots — no overflow cascade between them:
 
    ```
-   budget_t1 = 5
-   actual_t1 = min(len(tier1), budget_t1)
-   overflow   = budget_t1 - actual_t1
-
-   budget_t2 = 5 + overflow
-   actual_t2 = min(len(tier2), budget_t2)
-   overflow   = budget_t2 - actual_t2
-
-   budget_t3 = 5 + overflow
-   actual_t3 = min(len(tier3), budget_t3)
+   shown_t1    = tier1[:5]
+   shown_t2    = tier2[:5]
+   shown_t3    = tier3[:5]
+   shown_local = localPool[:5]
+   total shown = up to 20
    ```
 
-   Separate the three groups with a blank line. **No tier labels.** Continuous numbering 1–15. Omit a blank-line separator if the preceding group was empty.
+   Separate the four groups with a blank line. **No tier labels.** Continuous numbering 1–20. Omit a group's blank-line separator if the preceding group was empty. If `localPool` is empty, omit the local group entirely — no empty section, no placeholder text.
 
    Include location when available. Do not show tier labels to the user — just use the visual grouping.
 
@@ -246,17 +252,23 @@ After `node scripts/read-cache.mjs` returns (or fresh scan completes), do NOT du
    14. HN Jobs        — Staff Engineer, ML Platform             · Remote
    15. WeWorkRemotely — Senior Software Engineer                · Remote
 
+   16. CrowdStrike    — Senior Software Engineer, Detection     · Austin, TX
+   17. Rackspace      — Engineering Manager, Cloud Platform     · San Antonio, TX
+   18. Leidos         — Staff Engineer, Cybersecurity           · San Antonio, TX
+   19. General Motors — Senior Software Engineer, Platform      · Austin, TX
+   20. Dell Technologies — Principal Engineer, Infrastructure   · Austin, TX
+
    Pick a number to evaluate, or multiple (e.g., "1, 3, 5").
    Type "all top" to evaluate the top 5.
    Type "skip" to finish.
 
-   229 postings excluded (location incompatible with your work arrangement).
-   14 postings snoozed from previous scans.
    ```
 
    Format location as a short label after `·`. Take only the first segment if multiple locations are listed (split on `;`). Normalize all of these → "Remote (US)": "Remote, USA", "Remote, US", "United States - Remote", "US - Remote", "USA - Remote", "Remote- USA", "US (remote)", "USA (Remote)", "UNITED STATES - Remote". Normalize → "Remote (CA)": "Remote, Canada". Normalize → "Remote (UK)": "Remote, UK", "Remote, United Kingdom". Normalize → "Remote": bare "Remote" or "GLOBAL - Remote". Omit `·` if location is null.
 
-   Show the excluded count as a footnote line so the user knows postings were filtered, not missing. If `excludedDismissed > 0`, add a second footnote line: `{N} postings snoozed from previous scans.` Omit it if `excludedDismissed` is 0 or absent.
+   **Local tier location labels:** For local pool entries, show the nearest city and distance instead of the raw location string. Find the city segment within `local_radius_miles` that has the smallest `distanceMiles` value (use the same segment parsing as scan.mjs: split on `;`, take city before first `,`). Format as `City (Nmi)` — e.g. `San Antonio (8mi)` or `Austin (79mi)`. If `distanceMiles` ≥ 100, omit the distance and show only the city name.
+
+   Do not show any footnote about excluded or snoozed counts. That information is implementation detail — the list is already filtered and the user doesn't need to know the mechanics.
 
    Note: Discarded tracker entries are automatically suppressed for 60 days from their date, then reappear in the pick list. Snoozed (skipped) postings are suppressed for 30 days. All other tracker statuses (Applied, Evaluated, Interview, etc.) are suppressed indefinitely.
 
@@ -267,6 +279,39 @@ After `node scripts/read-cache.mjs` returns (or fresh scan completes), do NOT du
    ```
 
    If no new companies were added, omit this line entirely.
+
+5a. **Pre-screen offer** — immediately after the footnotes, show:
+
+   ```
+   Want me to pre-screen these before you pick? I'll score each one and flag the strong matches. (~1 min)
+   ```
+
+   If the user says yes (or "y", "sure", "yeah", or similar):
+
+   - Fetch all shown JD URLs in parallel — up to 20 (same fetch logic as the evaluate flow — use `modes/evaluate.md` scoring)
+   - For each posting, produce only the overall weighted score (1–5). Do not generate a report or write to tracker.
+   - Re-present the full list with scores inline, sorted within each tier group by score desc. Use `✓` for score ≥ `targets.min_score` (from profile.yml) and `✗` for below. Include a one-line header explaining the scale:
+
+   ```
+   Scores: 1–5 scale · ✓ = strong match (≥ 3.5) · ✗ = below threshold
+
+    1. ✓ 4.2  Deepgram   — Engineering Manager, Console Team    · Remote (US)
+    2. ✓ 3.9  Airbnb     — Engineering Manager, Identity        · Remote (US)
+    3. ✓ 3.7  GitLab     — Engineering Manager, Infrastructure  · Remote (US)
+    4. ✗ 2.6  Affirm     — IT Engineering Manager (Endpoint)    · Remote (US)
+    5. ✓ 4.0  Deepgram   — Engineering Manager, Engine Team     · Remote (US)
+
+    6. ✓ 3.6  Cloudflare — Solutions Engineering Manager        · Remote
+   ...
+
+   Pick a number to evaluate fully, or multiple (e.g., "1, 3, 5").
+   Type "all top" to evaluate the top 5.
+   Type "skip" to finish.
+   ```
+
+   - Update `data/session-pick-list.json`: add a `prescreened: true` flag and store `score` on each entry in `shown` so slot replacement can use it.
+   - If a posting's JD is unreachable (404, timeout), show `score: —` and omit the ✓/✗ indicator for that entry.
+   - If the user says no (or skips), proceed directly to step 6 with the original numbered list.
 
 6. **When the user picks a number**, look up the URL from the `shown` array in `data/session-pick-list.json` (or from the postings array if the session file wasn't written yet) and run the evaluate flow automatically — no URL copy-pasting needed.
 7. **After each evaluation**:
@@ -282,17 +327,18 @@ After `node scripts/read-cache.mjs` returns (or fresh scan completes), do NOT du
    2. Remove the evaluated posting from `shown`
    3. Renumber all remaining `shown` entries consecutively starting at slot 1
    4. Pull the next candidate from the tier buffer matching the removed entry's `tier` field:
-      - `tier: 1` → pull from `buffers.t1`; if empty, try `buffers.t2`; if still empty, `buffers.t3`
-      - `tier: 2` → pull from `buffers.t2`; if empty, try `buffers.t3`
-      - `tier: 3` → pull from `buffers.t3`
+      - `tier: "t1"` → pull from `buffers.t1`; if empty, try `buffers.t2`; if still empty, `buffers.t3`
+      - `tier: "t2"` → pull from `buffers.t2`; if empty, try `buffers.t3`
+      - `tier: "t3"` → pull from `buffers.t3` only
+      - `tier: "local"` → pull from `buffers.local` only (no cascade to remote tiers)
    5. If the matching buffer (and all fallback buffers) are empty, do a lazy refill before giving up:
       a. Run `node scripts/read-cache.mjs --top 150`
       b. Filter out all URLs currently in `shown`
-      c. Classify the remaining postings into tiers using the same logic as step 3
-      d. Populate `buffers.t1/t2/t3` with ALL newly classified candidates
+      c. Classify the remaining postings into local/t1/t2/t3 using the same logic as step 3
+      d. Populate `buffers.t1/t2/t3/local` with ALL newly classified candidates
       e. Write the updated session file
       f. Pull from the appropriate tier buffer
-      If even after lazy refill no candidates exist, show the list with fewer than 15 entries (final fallback only).
+      If even after lazy refill no candidates exist, show the list with fewer than 20 entries (final fallback only).
    6. Append the replacement at slot = (length of remaining shown + 1) — always goes at the bottom
    7. Write the updated `data/session-pick-list.json`
    8. Display the full refreshed pick list with `*` next to the new entry
@@ -302,7 +348,7 @@ After `node scripts/read-cache.mjs` returns (or fresh scan completes), do NOT du
 8. **If the user says "all top"**, evaluate the top 5 sequentially, showing a brief score summary after each.
 9. **When the user types "skip"** — snooze all postings from the current pick list that were NOT evaluated in this session:
 
-   - Collect the URLs + company + title for every posting in the 15-item list that the user did not pick for evaluation.
+   - Collect the URLs + company + title for every posting in the pick list (up to 20 entries) that the user did not pick for evaluation.
    - Read `data/dismissed.json` (parse as array; treat as `[]` if missing or unreadable).
    - For each unselected posting, upsert into the array using `url` as the dedup key:
      ```json

@@ -17,6 +17,10 @@ targets:
 
 work_arrangement:
   preference: remote              # remote | hybrid | onsite | any
+  home_zip: ""                    # your home zip code — auto-detects any city within local_radius_miles
+  local_radius_miles: 100         # cities within this radius appear in the local pick list tier
+                                  # set to match max_commute_miles for commute-only; higher to include nearby metros
+  local_search_terms: []          # city names for targeted Workday searches, e.g. ["San Antonio", "Austin"]
   max_commute_miles: 30           # one-way max; only used when preference is hybrid or onsite
   willing_to_relocate: false      # true | false
   relocation_cities: []           # e.g., ["Austin, TX", "New York, NY"] — only if willing_to_relocate: true

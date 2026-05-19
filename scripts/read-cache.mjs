@@ -7,12 +7,25 @@
 
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
+import yaml from 'js-yaml';
 
 const CACHE_PATH = resolve('data/scan-cache.json');
 const TRACKER_PATH = resolve('data/tracker.md');
 const DISMISSED_PATH = resolve('data/dismissed.json');
+const PROFILE_PATH = resolve('config/profile.yml');
 const CACHE_TTL_HOURS = 12;
 const DEFAULT_TOP = 150;
+
+function loadLocalRadius() {
+  try {
+    if (existsSync(PROFILE_PATH)) {
+      const p = yaml.load(readFileSync(PROFILE_PATH, 'utf8'));
+      return p?.work_arrangement?.local_radius_miles ?? 100;
+    }
+  } catch {}
+  return 100;
+}
+const LOCAL_RADIUS_MILES = loadLocalRadius();
 const DISCARD_SUPPRESS_MS = 60 * 24 * 3600 * 1000; // 60 days
 
 const args = process.argv.slice(2);
@@ -90,17 +103,30 @@ const matched = findQuery
       p.company?.toLowerCase().includes(findQuery) ||
       p.title?.toLowerCase().includes(findQuery)
     ).slice(0, 5)
-  : [
-      ...pickable.filter(p => p.type !== 'rss'),
-      ...pickable.filter(p => p.type === 'rss')
-                 .sort((a, b) => (b.relevance ?? 0) - (a.relevance ?? 0))
-                 .slice(0, topN),
-    ];
+  : (() => {
+      // Always include local postings (distanceMiles within radius) — they'd otherwise be buried by higher-relevance remote jobs
+      const localPool = pickable.filter(p => p.distanceMiles != null && p.distanceMiles <= LOCAL_RADIUS_MILES);
+      const localUrls = new Set(localPool.map(p => p.url));
+      const remotePool = pickable.filter(p => !localUrls.has(p.url));
+
+      const rssReserve = Math.min(Math.round(topN * 0.1), 10);
+      const nonRssSlots = topN - rssReserve;
+      const nonRss = remotePool
+        .filter(p => p.type !== 'rss')
+        .sort((a, b) => (b.relevance ?? 0) - (a.relevance ?? 0));
+      const rss = remotePool
+        .filter(p => p.type === 'rss')
+        .sort((a, b) => (b.relevance ?? 0) - (a.relevance ?? 0));
+      const nonRssPicked = nonRss.slice(0, nonRssSlots + Math.max(0, rssReserve - rss.length));
+      const rssPicked = rss.slice(0, rssReserve + Math.max(0, nonRssSlots - nonRss.length));
+      return [...nonRssPicked, ...rssPicked, ...localPool];
+    })();
 
 const top = matched.map(p => ({
     title: p.title,
     company: p.company,
     location: p.location ?? null,
+    distanceMiles: p.distanceMiles ?? null,
     type: p.type,
     relevance: p.relevance,
     url: p.url,

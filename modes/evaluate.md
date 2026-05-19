@@ -57,6 +57,18 @@ Write a report to `reports/{num}-{company-slug}-{date}.md` with:
 
 Overall score = weighted average of all dimensions, on a 1-5 scale.
 
+## Pre-Screen Mode
+
+When called from the post-scan pre-screen flow (not by the user directly), score-only mode applies:
+- Apply all 6 scoring dimensions with the same weights
+- Return only the overall weighted score (1–5) and a one-line summary
+- Do NOT write a report file to `reports/`
+- Do NOT update the keyword frequency tracker in `career-bank.md`
+- Do NOT produce a Skills Gap section
+- Do NOT update `data/skills.md`
+
+Pre-screen mode is triggered internally by the scan flow. The user always sees the full evaluate output when they pick a posting to evaluate directly.
+
 ## Skills Intelligence
 
 After scoring, perform these additional steps:

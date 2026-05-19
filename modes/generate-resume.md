@@ -86,7 +86,7 @@ Both the resume and cover letter must pass this checklist before output. Rewrite
 - Any sentence that could appear unedited in a cover letter for a different company
 
 **Cover letter — required:**
-- Open with a concrete fact, situation, or result from the candidate's own work — not a domain observation
+- Open like an email: salutation "Hello," on its own line/paragraph, then the body starts in the next paragraph with "My name is Victor Chevalier and I'm reaching out about the [exact role title] at [Company]." That intro sentence is followed in the same paragraph by a sentence grounding the reader in Victor's relevant prior experience. Never open cold with a fact, domain observation, or "I am excited to."
 - Every sentence carries a number, a named technology, or a specific outcome
 - Gap acknowledged in one plain sentence, no apology
 - Close: two sentences max, direct statement that logistics work, invite to talk. Last sentence must not be a one-liner flourish or self-summary.
@@ -108,7 +108,7 @@ After drafting the resume and cover letter, run this pass in full before writing
 - No bullet that could appear verbatim on a different candidate's resume
 
 ### Cover letter — for each sentence:
-- Para 1: Does it open with a concrete candidate fact or result? If it opens with an industry insight, domain observation, or "requires more than" construction — rewrite
+- Para 1 (salutation): Is it just "Hello," on its own line? If not — fix it. Para 2 must open with "My name is Victor Chevalier and I'm reaching out about the [role] at [Company]." followed by a grounding sentence about Victor's relevant experience. Not a domain observation, not an insight — a specific fact about what he has done.
 - No pithy one-liner paragraph closers at the end of any paragraph
 - No mechanical expertise-proof triplets (I know X, Y, and Z)
 - No "a bias toward X over Y" as a standalone sentence
