@@ -150,7 +150,8 @@ Before finalizing any cover letter or resume, self-audit against the AI-tell che
 - Self-congratulatory framing that the reader would never say out loud about themselves
 - Clever observations about the company's product that read as performance ("your audience knows immediately when the app is slow")
 - Time-compression clichés: "reducing X to days", "quarters to days", "made months into days" — these sound invented; state the actual before/after metric or cut the claim
-- Robotic logistics-acknowledgment: "The comp range works.", "The pay range works.", "The range works for me." — no professional says this out loud; if you must acknowledge logistics, write it as a human would ("Comp and remote both work." or just "I can connect in the next two weeks.")
+- Robotic logistics-acknowledgment: "The comp range works.", "The pay range works.", "The range works for me.", "Remote works.", "Remote works, and 10% travel is fine." — no professional says this out loud; omit entirely or fold into the closing naturally if truly needed
+- Fabricated experience: Never invent claims not in resume.md. Cover letters especially — agents have fabricated GovCloud experience, green-field/brown-field migrations, and governance frameworks the candidate never claimed. Every factual claim in a cover letter must trace to a specific line in resume.md. If the JD mentions a technology or environment the candidate has no experience with, omit it — do not invent it.
 - Repeating the same tic phrase across multiple letters: "I'd rather name that directly", "paper over it", "I won't pretend otherwise" — each is fine once; appearing in more than one document in a session makes it a recognizable AI pattern
 
 **Test:** Read each sentence aloud. If it sounds like a TED Talk, a LinkedIn post, or a ChatGPT output, rewrite it as plain declarative prose.
