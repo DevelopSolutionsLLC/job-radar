@@ -1,0 +1,34 @@
+node_modules/
+output/
+.env
+*.pdf
+.DS_Store
+
+# User-specific files (copy from *.example.* to set up)
+resume.md
+career-bank.md
+config/portals.yml
+config/profile.yml
+data/scan-history.tsv
+data/scan-cache.json
+data/tracker.md
+data/pipeline.md
+training/
+data/companies.md
+data/last-audit.txt
+data/dismissed.json
+data/session-pick-list.json
+data/geocode-cache.json
+data/employer-urls.json
+data/company-info.json
+data/feeds/
+data/linkedin-activity/
+reports/*.md
+
+# Local-only personal files — not for public repo
+scripts/leidos-compare.mjs
+scripts/linkedin-activity.mjs
+
+# Claude Code local settings
+.claude/settings.local.json
+.claude/settings.local.*.json

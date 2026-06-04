@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{TITLE}}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 9pt; color: #111; }
+
+    /* ── Page container ── */
+    .page {
+      position: relative;
+      padding: 16px 16px 10px 16px;
+      margin-bottom: 24px;
+      border-bottom: 2px dashed #bbb;
+    }
+    .last-page { border-bottom: none; margin-bottom: 0; }
+    .page-main { margin-right: 56px; }
+
+    /* ── Form title ── */
+    .form-title { text-align: center; font-size: 12pt; font-weight: bold; margin-bottom: 8px; }
+
+    /* ── Meta header ── */
+    .meta-header { border: 1px solid #444; padding: 5px 8px; margin-bottom: 6px; font-size: 8.5pt; }
+    .meta-row { display: flex; gap: 16px; align-items: baseline; margin-bottom: 4px; }
+    .meta-row:last-child { margin-bottom: 0; }
+    .meta-cell { flex: 1; white-space: nowrap; }
+    .pre-filled { text-decoration: underline; font-style: italic; }
+    .bf { display: inline-block; border-bottom: 1px solid #333; vertical-align: bottom; min-height: 1em; }
+
+    /* ── Instruction text ── */
+    .instruction { font-size: 7.5pt; margin-bottom: 6px; line-height: 1.45; }
+
+    /* ── Table ── */
+    table { width: 100%; border-collapse: collapse; font-size: 8pt; }
+    thead th {
+      font-size: 8pt; text-align: center; vertical-align: top;
+      padding: 4px 5px; border: 1.5px solid #333; line-height: 1.35;
+    }
+    .th-sub { font-weight: normal; font-style: italic; font-size: 7pt; display: block; }
+    td { padding: 5px 5px 4px 5px; border: 1px solid #555; vertical-align: top; }
+    tbody tr { border-bottom: 2px solid #444; }
+
+    /* column widths */
+    .col-desc     { width: 27%; }
+    .col-employer { width: 29%; }
+    .col-contact  { width: 24%; }
+    .col-result   { width: 20%; }
+
+    /* ── Field rows (label + blue box) ── */
+    .fr { display: flex; align-items: baseline; gap: 3px; margin-bottom: 3px; }
+    .fl { font-size: 7pt; white-space: nowrap; flex-shrink: 0; color: #222; }
+    .fv { flex: 1; background: #dce8f5; padding: 1px 3px; min-height: 13px; font-size: 8pt; min-width: 10px; }
+
+    /* phone sub-row */
+    .phone-row { align-items: baseline; }
+    .ph-l { flex: 2; }
+    .ph-r { flex: 1; margin-left: 4px; }
+
+    /* ── Checkboxes ── */
+    .cb {
+      display: inline-block; width: 9px; height: 9px;
+      border: 1px solid #333; vertical-align: middle;
+      margin-right: 2px; font-size: 7pt; line-height: 9px;
+      text-align: center; flex-shrink: 0;
+    }
+    .cb.ck::after { content: '✓'; }
+    .cr { display: flex; align-items: center; margin-bottom: 2px; }
+    .cl { font-size: 7.5pt; }
+
+    /* ── Results column ── */
+    .result-top { display: flex; align-items: center; margin-bottom: 3px; font-size: 7.5pt; flex-wrap: nowrap; }
+
+    /* ── TWC sidebar (per page, absolute) ── */
+    .twc-sidebar {
+      position: absolute; right: 0; top: 0; bottom: 0; width: 50px;
+      border-left: 1px solid #888;
+      display: flex; flex-direction: column;
+      background: #fff;
+    }
+    .twc-hdr {
+      padding: 5px 3px; font-size: 6pt; font-weight: bold;
+      text-align: center; border-bottom: 1px solid #888; line-height: 1.5;
+    }
+    .twc-field {
+      flex: 1; border-bottom: 1px solid #ccc;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .twc-field:last-child { border-bottom: none; }
+    .twc-field span {
+      writing-mode: vertical-rl; transform: rotate(180deg);
+      font-size: 6.5pt; white-space: nowrap; color: #333;
+    }
+    .twc-sm { flex: 0.6; }
+    .twc-lg { flex: 2; }
+
+    /* ── Page footer ── */
+    .form-footer { margin-top: 6px; font-size: 7pt; color: #111; line-height: 1.5; }
+    .form-footer p { margin-bottom: 2px; }
+    .form-num { margin-top: 4px; font-size: 7pt; color: #555; }
+
+    /* ── Print ── */
+    @page { size: Letter landscape; margin: 0.4in 0.3in; }
+    @media print {
+      body { padding: 0; }
+      .page { border-bottom: none; margin-bottom: 0; padding: 12px 12px 8px 12px; }
+      .page { page-break-after: always; }
+      .last-page { page-break-after: avoid; }
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+{{BODY}}
+</body>
+</html>

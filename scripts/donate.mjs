@@ -1,0 +1,40 @@
+#!/usr/bin/env node
+
+// Half-block QR for https://cash.app/$vtchevalier (Version 2, ECC-L)
+const qr = [
+  ' ▄▄▄▄▄▄▄ ▄ ▄▄▄▄▄ ▄ ▄▄▄▄▄▄▄ ',
+  ' █ ▄▄▄ █ ▀▀█ ▄▄█ ▀ █ ▄▄▄ █ ',
+  ' █ ███ █ ▄▄█ ▀█▀▀▄ █ ███ █ ',
+  ' █▄▄▄▄▄█ █ ▄ █▀█ ▄ █▄▄▄▄▄█ ',
+  ' ▄▄▄  ▄▄ █▄█▄█  ▄ ▄▄▄▄  ▄▄ ',
+  ' █ ▀ ██▄▀▄▀▀█▀▄▀██▄█▀ █▄▀█ ',
+  ' ▄   ▄ ▄▀▄█  ▄  ▄ ▀▄▄ ▀  ▄ ',
+  ' ▄█▄▀▄▄▄▄▄▄ ██ ▄█▀██▀ ▄▄▀█ ',
+  ' ▄▄█▄▄ ▄▀  █ █ ▀▄▄████▀ ▄  ',
+  ' ▄▄▄▄▄▄▄ ▀█ █▀█▄ █ ▄ █   █ ',
+  ' █ ▄▄▄ █ ▀█▀▄▄  ██▄▄▄█  ▀  ',
+  ' █ ███ █ ▄▀▄██▄  ▀█ ▄█▄▀█▄ ',
+  ' █▄▄▄▄▄█ ████▀ ▀▄█▄█▀▀▄  ▄ ',
+];
+
+const bar = '━'.repeat(36);
+
+console.log();
+console.log(`  ${bar}`);
+console.log();
+console.log('  Thanks for using job-radar!');
+console.log();
+
+for (const line of qr) {
+  console.log(`  ${line}`);
+}
+
+console.log();
+console.log('  Cash App: $vtchevalier');
+console.log('  https://cash.app/$vtchevalier');
+console.log();
+console.log('  Built by Victor T. Chevalier');
+console.log('  https://github.com/VTChevalier');
+console.log();
+console.log(`  ${bar}`);
+console.log();
