@@ -1,4 +1,5 @@
 {
+  "includeCoAuthoredBy": false,
   "allowedTools": [
     "Bash(node scripts/setup.mjs)",
     "Bash(npm install)",
