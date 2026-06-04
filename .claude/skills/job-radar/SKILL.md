@@ -160,17 +160,26 @@ If no subcommand is given (user just types `/job-radar` or `/job-radar help`), p
     help                       Show this list
 ```
 
+## Global UX rules
+
+**Never expose internals.** These rules apply to every command, not just scan:
+- Do not narrate which bash commands, scripts, or tools you are running.
+- Do not surface tool errors, exit codes, or raw script output to the user. If a script or tool call fails, handle it gracefully and report only the user-relevant outcome (e.g. "Couldn't reach that URL — is it still live?" not a stack trace).
+- Do not explain why a step was skipped or retried unless the user needs to take action.
+
+**Git operations** — when staging files for a commit, always derive the list from `git status --porcelain` (or equivalent) rather than hard-coding file paths. Never attempt to `git add` a path that appears in `.gitignore`; silently skip it. If all changed files are gitignored, confirm the commit has nothing to stage and say so cleanly.
+
 ## Commands
 
 ### Discovery & Scanning
 
 `scan` and `discover` are one unified flow. Discovery always runs **before** scan so newly found companies are included in the same scan run.
 
-**Scan UX rules:** Do NOT narrate which bash commands you are running. Do NOT echo raw script output. Show only human-readable progress:
-- Fresh scan: `"Discovering companies..."` before discover.mjs, then `"Scanning {N} portals..."` before scan.mjs
-- Cached scan: `"Loading your last scan..."` before running read-cache.mjs
+**Scan UX rules:** Do NOT narrate which bash commands you are running. Run discover.mjs and scan.mjs in the background and use the Monitor tool so their stdout streams live into the conversation.
+- Fresh scan: output `"Discovering companies..."` before starting discover.mjs (background + Monitor), then output `"Scanning portals..."` before starting scan.mjs (background + Monitor)
+- Cached scan: `"Loading your last scan..."` before running read-cache.mjs (foreground, instant)
 
-After scripts finish, go directly to the post-scan pick list. No summaries, no script headers.
+Script stdout streams live — no additional narration. After scripts finish, go directly to the post-scan pick list. No summaries, no script headers beyond the two progress lines.
 
 **Full scan flow and post-scan interactive flow → `modes/scan.md`**
 
