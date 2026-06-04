@@ -88,8 +88,46 @@ Rules for conversion:
 
 ## Step 5 — Set up profile (if not already done)
 
-If `config/profile.yml` doesn't exist yet, offer to create it:
+If `config/profile.yml` doesn't exist yet, do the following **without asking permission**:
 
-> "Want me to set up your profile too? I can create `config/profile.yml` with your name, location, and target roles based on your resume."
+### 5a — Auto-fill from resume
 
-If they agree, create `config/profile.yml` from `config/profile.example.yml` with their details filled in.
+Extract these fields directly from the imported resume content:
+
+- `name` — from the resume header
+- `email` — from the resume header
+- `location` — from the resume header (verbatim)
+- `targets.roles` — derive 2–3 plausible target titles from the candidate's current/most recent job title:
+  - Manager/Lead titles → e.g. `["Senior Manager, Engineering", "Director of Engineering", "Director of Platform Engineering"]`
+  - IC/Staff/Principal titles → e.g. `["Staff Engineer", "Principal Engineer", "Senior Staff Engineer"]`
+  - Director/VP titles → e.g. `["Director of Engineering", "VP of Engineering", "Head of Engineering"]`
+- `resume_builder.role_type` — infer from current title: Manager/Lead → `manager`, IC/Staff/Principal → `ic`, Director/VP/Head → `director`, clearly mixed → `hybrid`
+- `resume_builder.seniority` — infer from current title: Senior/Principal/Staff → `senior`, Director/VP/Head → `executive`, otherwise `senior`
+
+### 5b — Ask wizard questions for fields that can't be inferred
+
+Run through these questions from `modes/configure.md` in order. Show current/default values where applicable:
+
+1. **Work arrangement** — remote / hybrid / onsite / any
+2. **Max commute miles** — only ask if answer to (1) was hybrid or onsite
+3. **Willing to relocate** — yes/no; if yes, ask for relocation cities
+4. **Minimum score** — show default 3.5, accept any float 1.0–5.0
+5. **Compensation** — min and target (accept shorthand like "150k")
+
+Skip the "Target roles" and "Resume builder role type" questions — those were already filled in Step 5a.
+
+### 5c — Write profile.yml
+
+Read `config/profile.example.yml`, fill in all collected values, and write the result to `config/profile.yml`.
+
+### 5d — Combined confirmation
+
+Show a single summary block and ask one confirmation question covering both resume and profile:
+
+```
+Resume       {Name} · {N} roles · {N} skills
+Profile      {location} · {work preference} · ${min}k–${target}k · min score {score}
+             Target roles: {role1}, {role2}, {role3}
+```
+
+> "Does this look right? You can edit `resume.md` or `config/profile.yml` directly, or tell me what to fix."
