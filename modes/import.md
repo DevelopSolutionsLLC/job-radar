@@ -90,21 +90,53 @@ Rules for conversion:
 
 If `config/profile.yml` doesn't exist yet, do the following **without asking permission**:
 
-### 5a — Auto-fill from resume
+### 5a — Auto-fill from resume (silent fields)
 
-Extract these fields directly from the imported resume content:
+Extract these fields directly from the imported resume content **without asking**:
 
 - `name` — from the resume header
 - `email` — from the resume header
 - `location` — from the resume header (verbatim)
-- `targets.roles` — derive 2–3 plausible target titles from the candidate's current/most recent job title:
-  - Manager/Lead titles → e.g. `["Senior Manager, Engineering", "Director of Engineering", "Director of Platform Engineering"]`
-  - IC/Staff/Principal titles → e.g. `["Staff Engineer", "Principal Engineer", "Senior Staff Engineer"]`
-  - Director/VP titles → e.g. `["Director of Engineering", "VP of Engineering", "Head of Engineering"]`
 - `resume_builder.role_type` — infer from current title: Manager/Lead → `manager`, IC/Staff/Principal → `ic`, Director/VP/Head → `director`, clearly mixed → `hybrid`
 - `resume_builder.seniority` — infer from current title: Senior/Principal/Staff → `senior`, Director/VP/Head → `executive`, otherwise `senior`
 
-### 5b — Ask wizard questions for fields that can't be inferred
+### 5b — Interactive role selection
+
+From the candidate's current/most recent job title, build a three-tier role ladder using standard engineering and management progressions:
+
+**Management ladder:** Team Lead → Engineering Manager → Senior Manager, Engineering → Director of Engineering → Senior Director of Engineering → VP of Engineering → SVP of Engineering → CTO
+
+**IC ladder:** Junior/Associate SWE → Software Engineer → Senior Software Engineer → Staff Engineer → Principal Engineer → Distinguished Engineer → Fellow
+
+For each tier, generate 1–2 title variants that fit the candidate's domain (infer from their resume — security, platform, product, data, etc.). Use domain variants like "of Engineering", "of Platform Engineering", "of Security Engineering", "of Product Engineering" where appropriate.
+
+Display this menu to the user:
+
+```
+Based on your current title ([TITLE]), here are suggested target roles:
+
+  Default — all three tiers:
+    Step down:  [−1 title(s)]
+    Lateral:    [current title(s)]
+    Promotion:  [+1 title(s)]
+
+  1. Use default (step-down + lateral + promotion)  ← recommended
+  2. Promotion titles only (+1 level)
+  3. Lateral only (same level)
+  4. Step-down only (−1 level)
+  5. Enter titles manually
+```
+
+Wait for the user's choice:
+- **1** → use all three tiers combined
+- **2** → use only the promotion tier titles
+- **3** → use only the lateral tier titles
+- **4** → use only the step-down tier titles
+- **5** → ask: "Enter your target titles (comma-separated):" and use whatever they type
+
+Store the result as `targets.roles`.
+
+### 5c — Ask wizard questions for fields that can't be inferred
 
 Run through these questions from `modes/configure.md` in order. Show current/default values where applicable:
 
@@ -114,13 +146,13 @@ Run through these questions from `modes/configure.md` in order. Show current/def
 4. **Minimum score** — show default 3.5, accept any float 1.0–5.0
 5. **Compensation** — min and target (accept shorthand like "150k")
 
-Skip the "Target roles" and "Resume builder role type" questions — those were already filled in Step 5a.
+Skip the "Target roles" and "Resume builder role type" questions — those were already handled in Steps 5a and 5b.
 
-### 5c — Write profile.yml
+### 5d — Write profile.yml
 
 Read `config/profile.example.yml`, fill in all collected values, and write the result to `config/profile.yml`.
 
-### 5d — Combined confirmation
+### 5e — Combined confirmation
 
 Show a single summary block and ask one confirmation question covering both resume and profile:
 

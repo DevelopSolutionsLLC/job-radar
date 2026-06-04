@@ -65,10 +65,44 @@ Store as `work_arrangement.willing_to_relocate` (true/false) and `work_arrangeme
 
 ## Q5 — Target roles
 
-> "What job titles are you targeting? (comma-separated, or press Enter to keep current)
-> Current: {comma-joined list}"
+If `resume.md` exists, read the candidate's most recent job title and build a three-tier role ladder using standard progressions:
 
-Show current list. Accept additions or a full replacement. Store as `targets.roles` list.
+**Management:** Team Lead → Engineering Manager → Senior Manager, Engineering → Director of Engineering → Senior Director of Engineering → VP of Engineering → SVP of Engineering → CTO  
+**IC:** Junior/Associate SWE → Software Engineer → Senior Software Engineer → Staff Engineer → Principal Engineer → Distinguished Engineer → Fellow
+
+Generate 1–2 domain variants per tier based on the candidate's background (infer from resume — security, platform, product, etc.).
+
+Display this menu:
+
+```
+Based on your current title ([TITLE]), here are suggested target roles:
+
+  Default — all three tiers:
+    Step down:  [−1 title(s)]
+    Lateral:    [current title(s)]
+    Promotion:  [+1 title(s)]
+
+  Current list: {comma-joined list or "not set"}
+
+  1. Use default (step-down + lateral + promotion)  ← recommended
+  2. Promotion titles only (+1 level)
+  3. Lateral only (same level)
+  4. Step-down only (−1 level)
+  5. Keep current list
+  6. Enter titles manually
+```
+
+Wait for the user's choice:
+- **1–4** → populate from the corresponding tier(s) as described above
+- **5** → keep the existing `targets.roles` list unchanged
+- **6** → ask: "Enter your target titles (comma-separated):" and use whatever they type
+
+If `resume.md` does not exist, fall back to the original free-text prompt:
+
+> "What job titles are you targeting? (comma-separated, or press Enter to keep current)
+> Current: {comma-joined list or "not set"}"
+
+Store result as `targets.roles` list.
 
 ---
 
