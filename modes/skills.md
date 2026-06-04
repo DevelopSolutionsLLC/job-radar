@@ -6,9 +6,21 @@ Handles the skills queue, gap analysis, study tracking, and promotion of complet
 
 `/job-radar skills` (also accepts `/job-radar gaps` or `/job-radar learn` as aliases — both route here):
 
-1. **Keyword gaps** — Read `career-bank.md` and show the frequency tracker. Highlight any keyword that appears 3+ times across evaluated JDs with no matching bullet tag. These are the gaps most likely to cost the user a screen.
+1. **Keyword gaps** — Read `career-bank.md` and show the frequency tracker.
 
-2. **Study queue** — Read `training/skills.md` and show all rows sorted by JD count descending. Group by status: In Progress first, then Not Started, then Done (collapsed unless user asks). Compute priority from JD Count: High ≥ 6, Medium 3–5, Low < 3.
+   **Empty state:** If `career-bank.md` doesn't exist or has no Keyword Frequency Tracker table, show: "No JDs evaluated yet — run `/job-radar scan` to start building your keyword history." Skip to step 2.
+
+   The frequency tracker table has columns: `Keyword | Count | Last Seen`. "No matching bullet tag" means no `<!-- tags: ... -->` comment in any bullet section of `career-bank.md` contains that keyword (case-insensitive).
+
+   Display: show keywords with Count ≥ 3 and no matching bullet tag as the prioritized gap list. Show remaining keywords (Count ≥ 1) as context below, collapsed.
+
+   Highlight any gap keyword (Count ≥ 3, no tag) — these are the gaps most likely to cost the user a screen.
+
+   > Note: The frequency tracker is only updated during full evaluations (`/job-radar evaluate`), not during the scan pre-screen.
+
+2. **Study queue** — Read `training/skills.md` and show all rows sorted by JD count descending. Group by status (display labels use title case; stored field values use lowercase): In Progress first, then Not Started, then Done (collapsed unless user asks). Compute priority from JD Count: High ≥ 6, Medium 3–5, Low < 3.
+
+   **Empty state:** If `training/skills.md` doesn't exist or has no data rows, check the auto-seed condition (see **Auto-seed** below). If nothing to seed, show: "Your skills queue is empty — evaluate a posting to populate it."
 
 3. **After showing both**, ask:
    > "Want to update any queue statuses, or add a gap keyword to the queue?"
@@ -16,6 +28,17 @@ Handles the skills queue, gap analysis, study tracking, and promotion of complet
      - done → set Status to `done`, set Completed to today. Offer to promote to resume (run **Promote skill to resume** flow).
      - still going / not yet → no change
    - If yes to adding gaps: for each uncovered keyword gap (3+ appearances, no bullet), ask if they want to add it to the queue. If yes, append a row to `training/skills.md` with Status = `not started` and JD count from the tracker.
+
+## Auto-seed
+
+When `training/skills.md` exists but has no data rows AND `career-bank.md` has keywords with Count ≥ 3:
+
+1. Identify all keywords in the frequency tracker with Count ≥ 3 that have no matching bullet tag in any career-bank.md bullet section (case-insensitive).
+2. For each such keyword, append a row to `training/skills.md`: Skill = keyword, JD Count = tracker count, Resource = `—`, Est. Time = `—`, Status = `not started`, Started = `—`, Completed = `—`.
+3. Sort all new rows by JD Count descending.
+4. After the current command completes, show one quiet line: "Seeded your skills list with {N} gaps from your JD history — run `/job-radar skills` to review."
+
+This is a one-time seed — once data rows exist, the bootstrap does not run again. Skip entirely if `career-bank.md` doesn't exist or has no Count ≥ 3 keywords.
 
 ## Skills Gap Branching Rules
 
