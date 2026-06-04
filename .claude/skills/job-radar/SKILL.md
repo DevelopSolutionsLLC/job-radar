@@ -18,6 +18,7 @@ argument-hint: |
   add "name or title"   Add a company, role title, or RSS feed URL
   remove "name"         Remove a company or exclude a role title
   config                Full setup wizard (location, targets, preferences)
+  roles                 Re-derive target roles from resume (step-down / lateral / promotion menu)
   log                   Generate styled HTML + PDF application log
   donate                Support the project
   help                  Show all commands
@@ -151,6 +152,7 @@ If no subcommand is given (user just types `/job-radar` or `/job-radar help`), p
     add "name or title"        Add a company, role title, or RSS feed URL
     remove "name or title"     Remove a company or exclude a role title
     config                     Full setup wizard (location, targets, preferences)
+    roles                      Re-derive target roles from resume (step-down / lateral / promotion menu)
 
   Other
     log                        Generate styled HTML + PDF application log (output/)
@@ -238,6 +240,16 @@ Rules:
 #### Configure Wizard
 
 `/job-radar configure` or `/job-radar config` → **→ `modes/configure.md`**
+
+#### Roles shortcut
+
+`/job-radar roles` → Re-derive target role suggestions from the current resume without running the full config wizard.
+
+1. Read `resume.md` and extract the candidate's most recent job title
+2. Build the three-tier role ladder per the rules in `modes/import.md` Step 5b (step-down, lateral, promotion — 3–5 variants per tier)
+3. Display the numbered menu (options 1–6 as defined in `modes/configure.md` Q5, including "Keep current list")
+4. Wait for the user's choice and write the result to `targets.roles` in `config/profile.yml`
+5. Confirm: show the final roles list and say "Target roles updated."
 
 ### Pipeline
 

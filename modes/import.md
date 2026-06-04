@@ -108,7 +108,14 @@ From the candidate's current/most recent job title, build a three-tier role ladd
 
 **IC ladder:** Junior/Associate SWE → Software Engineer → Senior Software Engineer → Staff Engineer → Principal Engineer → Distinguished Engineer → Fellow
 
-For each tier, generate 1–2 title variants that fit the candidate's domain (infer from their resume — security, platform, product, data, etc.). Use domain variants like "of Engineering", "of Platform Engineering", "of Security Engineering", "of Product Engineering" where appropriate.
+For each tier, generate **all plausible title variants** that a recruiter or ATS might use for that level and domain. The goal is maximum job match coverage — err toward more titles, not fewer. 
+
+Rules for generating variants:
+- Include all common phrasings for the role level: e.g. "Engineering Manager", "Software Engineering Manager", "Software Development Manager", "Technical Manager" are all step-down variants from Senior Manager
+- If the candidate's current title includes a domain noun (Software, Cybersecurity, Platform, Data, Product, Security, Infrastructure), include both domain-specific and domain-neutral variants at each tier
+- For management titles, cover the common structural variations: "Manager, X Engineering", "X Engineering Manager", "Manager of X Engineering", "Head of X"
+- For IC titles, cover "Staff X Engineer", "Principal X Engineer", "Senior X Engineer" with the candidate's primary domain noun
+- Aim for 3–5 variants per tier for management tracks, 2–4 for IC tracks
 
 Display this menu to the user:
 

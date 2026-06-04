@@ -70,7 +70,7 @@ If `resume.md` exists, read the candidate's most recent job title and build a th
 **Management:** Team Lead → Engineering Manager → Senior Manager, Engineering → Director of Engineering → Senior Director of Engineering → VP of Engineering → SVP of Engineering → CTO  
 **IC:** Junior/Associate SWE → Software Engineer → Senior Software Engineer → Staff Engineer → Principal Engineer → Distinguished Engineer → Fellow
 
-Generate 1–2 domain variants per tier based on the candidate's background (infer from resume — security, platform, product, etc.).
+Generate **all plausible title variants** per tier — aim for 3–5 per tier on management tracks, 2–4 on IC tracks. Include both domain-specific and domain-neutral phrasings for each level (e.g. "Software Engineering Manager", "Engineering Manager", "Software Development Manager" are all valid step-down variants from a Senior Manager title). Cover common ATS and recruiter variations so the scan catches the maximum number of matching postings.
 
 Display this menu:
 
